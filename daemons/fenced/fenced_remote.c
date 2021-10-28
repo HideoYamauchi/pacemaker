@@ -75,6 +75,8 @@ typedef struct st_query_result_s {
 } st_query_result_t;
 
 GHashTable *stonith_remote_op_list = NULL;
+//YAMAUCHI
+GHashTable *check_async_reply_list = NULL;
 
 void call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer, int rc);
 static void remote_op_done(remote_fencing_op_t * op, xmlNode * data, int rc, int dup);

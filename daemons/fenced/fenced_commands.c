@@ -110,6 +110,15 @@ typedef struct async_command_s {
     stonith_device_t *activating_on;
 } async_command_t;
 
+//YAMAUCHI
+typedef struct check_async_reply {
+
+    char *remote_op_id;
+    int timeout; /* seconds */
+    mainloop_timer_t *timer;
+
+} check_async_reply_t;
+
 static xmlNode *stonith_construct_async_reply(async_command_t * cmd, const char *output,
                                               xmlNode * data, int rc);
 
@@ -2273,6 +2282,16 @@ log_operation(async_command_t * cmd, int rc, int pid, const char *next, const ch
     }
 }
 
+//YAMAUCHI
+static gboolean
+check_async_reply_cb(gpointer data)
+{
+    check_async_reply_t *a = data;
+    crm_trace("Async reply timeout. %s", a->remote_op_id);
+    //TODO:Bcast Async reply Send
+    return FALSE;
+}
+
 static void
 stonith_send_async_reply(async_command_t *cmd, const char *output, int rc,
                          int pid, bool merged)
@@ -2291,9 +2310,29 @@ stonith_send_async_reply(async_command_t *cmd, const char *output, int rc,
         crm_trace("Never broadcast '%s' replies", cmd->action);
 
     } else if (!stand_alone && pcmk__str_eq(cmd->origin, cmd->victim, pcmk__str_casei) && !pcmk__str_eq(cmd->action, "on", pcmk__str_casei)) {
-        crm_trace("Broadcast '%s' reply for %s", cmd->action, cmd->victim);
-        crm_xml_add(reply, F_SUBTYPE, "broadcast");
-        bcast = TRUE;
+        /* If the DC node is the starting point in the absence of topology and fencing the DC node, the fencing success will "Broadcast" to all nodes. */
+        /* A fencing failure replies to the DC node and escalate the fencing. */
+        if (rc == 0) {
+            crm_trace("Broadcast '%s' reply for %s", cmd->action, cmd->victim);
+            crm_xml_add(reply, F_SUBTYPE, "broadcast");
+            bcast = TRUE;
+        } else {
+//YAMAUCHI
+            check_async_reply_t *async_op = NULL;
+            if (check_async_reply_list == NULL) {
+                 check_async_reply_list = pcmk__strkey_table(free, free);
+            }
+
+            async_op = calloc(1, sizeof(check_async_reply_t));
+            CRM_ASSERT(async_op != NULL);
+            async_op->remote_op_id = strdup(cmd->remote_op_id);
+            async_op->timeout = cmd->timeout;
+            async_op->timer = mainloop_timer_add("check_async_reply", async_op->timeout, FALSE, check_async_reply_cb, async_op);
+
+            g_hash_table_replace(check_async_reply_list, async_op->remote_op_id, async_op);
+ 
+            mainloop_timer_start(async_op->timer);
+        }
     }
 
     log_operation(cmd, rc, pid, NULL, output, merged);

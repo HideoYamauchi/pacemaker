@@ -270,3 +270,6 @@ extern long stonith_watchdog_timeout_ms;
 extern GList *stonith_watchdog_targets;
 
 extern GHashTable *stonith_remote_op_list;
+
+//YAMAUCHI
+extern GHashTable *check_async_reply_list;
