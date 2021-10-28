@@ -355,6 +355,19 @@ undo_op_remap(remote_fencing_op_t *op)
         strcpy(op->action, "reboot");
     }
 }
+//YAMAUCHI
+static void 
+clear_check_async_reply(remote_fencing_op_t * op)
+{
+    check_async_reply_t *async_reply_op = NULL;
+    async_reply_op = g_hash_table_lookup(check_async_reply_list, op->id);    
+    if (async_reply_op) {
+        if (async_reply_op->timer){
+            mainloop_timer_del(async_reply_op->timer);
+        }
+        g_hash_table_remove(check_async_reply_list, op->id);
+    }
+}
 
 static xmlNode *
 create_op_done_notify(remote_fencing_op_t * op, int rc)
@@ -507,6 +520,8 @@ remote_op_done(remote_fencing_op_t * op, xmlNode * data, int rc, int dup)
     set_fencing_completed(op);
     clear_remote_op_timers(op);
     undo_op_remap(op);
+//YAMAUCHI
+    clear_check_async_reply(op);
 
     if (op->notify_sent == TRUE) {
         crm_err("Already sent notifications for '%s' targeting %s by %s for "

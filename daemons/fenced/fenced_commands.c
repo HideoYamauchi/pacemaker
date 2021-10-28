@@ -110,15 +110,6 @@ typedef struct async_command_s {
     stonith_device_t *activating_on;
 } async_command_t;
 
-//YAMAUCHI
-typedef struct check_async_reply {
-
-    char *remote_op_id;
-    int timeout; /* seconds */
-    mainloop_timer_t *timer;
-
-} check_async_reply_t;
-
 static xmlNode *stonith_construct_async_reply(async_command_t * cmd, const char *output,
                                               xmlNode * data, int rc);
 
