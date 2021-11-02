@@ -360,11 +360,15 @@ static void
 clear_check_async_reply(remote_fencing_op_t * op)
 {
     check_async_reply_t *async_reply_op = NULL;
+
+crm_info("##### YAMAUCHI clear_check_async_reply. op = %s", op->id);
     async_reply_op = g_hash_table_lookup(check_async_reply_list, op->id);    
     if (async_reply_op) {
         if (async_reply_op->timer){
+crm_info("##### YAMAUCHI timer stop. op = %s", op->id);
             mainloop_timer_del(async_reply_op->timer);
         }
+crm_info("##### YAMAUCHI remove check_async. op = %s", op->id);
         g_hash_table_remove(check_async_reply_list, op->id);
     }
 }

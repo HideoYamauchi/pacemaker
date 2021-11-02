@@ -2279,6 +2279,7 @@ check_async_reply_cb(gpointer data)
 {
     check_async_reply_t *a = data;
     crm_trace("Async reply timeout. %s", a->remote_op_id);
+    crm_info("#### YAMAUCHI #### Async reply timeout. %s", a->remote_op_id);
     //TODO:Bcast Async reply Send
     return FALSE;
 }
@@ -2321,7 +2322,7 @@ stonith_send_async_reply(async_command_t *cmd, const char *output, int rc,
             async_op->timer = mainloop_timer_add("check_async_reply", async_op->timeout, FALSE, check_async_reply_cb, async_op);
 
             g_hash_table_replace(check_async_reply_list, async_op->remote_op_id, async_op);
- 
+crm_info("#### YAMAUCHI Check Async reply timer. op = %s", async_op->remote_op_id); 
             mainloop_timer_start(async_op->timer);
         }
     }
