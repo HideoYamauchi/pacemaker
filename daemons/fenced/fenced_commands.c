@@ -2314,7 +2314,8 @@ stonith_send_async_reply(async_command_t *cmd, const char *output, int rc,
             if (check_async_reply_list == NULL) {
                  check_async_reply_list = pcmk__strkey_table(free, free);
             }
-
+            //TODO: 
+            //You also need cmd, output, rc to broadcast the failure with check_async_reply_cb().
             async_op = calloc(1, sizeof(check_async_reply_t));
             CRM_ASSERT(async_op != NULL);
             async_op->remote_op_id = strdup(cmd->remote_op_id);
