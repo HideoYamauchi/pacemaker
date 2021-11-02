@@ -2319,10 +2319,10 @@ stonith_send_async_reply(async_command_t *cmd, const char *output, int rc,
             CRM_ASSERT(async_op != NULL);
             async_op->remote_op_id = strdup(cmd->remote_op_id);
             async_op->timeout = cmd->timeout;
-            async_op->timer = mainloop_timer_add("check_async_reply", async_op->timeout, FALSE, check_async_reply_cb, async_op);
+            async_op->timer = mainloop_timer_add("check_async_reply", async_op->timeout * 1000, FALSE, check_async_reply_cb, async_op);
 
             g_hash_table_replace(check_async_reply_list, async_op->remote_op_id, async_op);
-crm_info("#### YAMAUCHI Check Async reply timer. op = %s", async_op->remote_op_id); 
+crm_info("#### YAMAUCHI Start check Async reply timer. op = %s timeout = %d", async_op->remote_op_id, async_op->timeout * 1000); 
             mainloop_timer_start(async_op->timer);
         }
     }

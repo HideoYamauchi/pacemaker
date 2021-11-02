@@ -361,6 +361,10 @@ clear_check_async_reply(remote_fencing_op_t * op)
 {
     check_async_reply_t *async_reply_op = NULL;
 
+    if (check_async_reply_list == NULL) {
+crm_info("##### YAMAUCHI clear_check_async_reply. NULL return op = %s", op->id);
+        return;
+    }
 crm_info("##### YAMAUCHI clear_check_async_reply. op = %s", op->id);
     async_reply_op = g_hash_table_lookup(check_async_reply_list, op->id);    
     if (async_reply_op) {
