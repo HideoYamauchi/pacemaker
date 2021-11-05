@@ -1215,6 +1215,8 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     char *result_alerts_digest = NULL;
     char *result_status_digest = NULL;
 
+    gboolean skip_election = FALSE;
+
     CRM_ASSERT(cib_status == pcmk_ok);
 
     if(digest_timer == NULL) {
@@ -1362,6 +1364,10 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
                 send_r_notify = TRUE;
             }
 
+            if (!change_node && !change_status) {
+                skip_election = TRUE;
+            }
+
         } else if (pcmk__str_eq(CIB_OP_ERASE, op, pcmk__str_none)) {
             send_r_notify = TRUE;
         }
@@ -1399,7 +1405,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     if (send_r_notify) {
         const char *origin = crm_element_value(request, F_ORIG);
 
-        cib_replace_notify(origin, the_cib, rc, *cib_diff);
+        cib_replace_notify(origin, the_cib, rc, *cib_diff, skip_election);
     }
 
     xml_log_patchset(LOG_TRACE, "cib:diff", *cib_diff);
