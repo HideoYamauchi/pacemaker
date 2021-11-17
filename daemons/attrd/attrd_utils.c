@@ -230,6 +230,8 @@ attrd_cib_replaced_cb(const char *event, xmlNode * msg)
         return;
     }
 
+    crm_element_value_int(msg, F_CIB_CHANGE_SECTION, &change_section);
+
     if (attrd_election_won()) {
         if (change_section & (cib_change_section_nodes | cib_change_section_status)) {
             crm_notice("Updating all attributes after %s event", event);
