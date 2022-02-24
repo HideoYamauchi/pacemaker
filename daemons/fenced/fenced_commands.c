@@ -2451,6 +2451,18 @@ log_async_result(async_command_t *cmd, const pcmk__action_result_t *result,
     }
 }
 
+//YAMAUCHI
+static gboolean
+check_async_reply_cb(gpointer data)
+{
+    check_async_reply_t *a = data;
+    crm_trace("Async reply timeout. %s", a->remote_op_id);
+    crm_info("#### YAMAUCHI #### Async reply timeout. %s", a->remote_op_id);
+    //Bcast Async reply Send
+    send_cluster_message(NULL, crm_msg_stonith_ng, a->reply, FALSE);
+    return FALSE;
+}
+
 /*!
  * \internal
  * \brief Reply to requester after asynchronous command completion
@@ -2477,14 +2489,37 @@ send_async_reply(async_command_t *cmd, const pcmk__action_result_t *result,
 
     if (!stand_alone && pcmk__is_fencing_action(cmd->action)
         && pcmk__str_eq(cmd->origin, cmd->victim, pcmk__str_casei)) {
-        /* The target was also the originator, so broadcast the result on its
-         * behalf (since it will be unable to).
-         */
-        crm_trace("Broadcast '%s' result for %s (target was also originator)",
+//YAMAUCHI
+crm_info("#### YAMAUCHI #### exit_status : %d execution_status : %d", result->exit_status, result->execution_status);
+        if (result->exit_status == CRM_EX_OK) {
+            /* The target was also the originator, so broadcast the result on its
+             * behalf (since it will be unable to).
+             */
+            crm_trace("Broadcast '%s' result for %s (target was also originator)",
                   cmd->action, cmd->victim);
-        crm_xml_add(reply, F_SUBTYPE, "broadcast");
-        crm_xml_add(reply, F_STONITH_OPERATION, T_STONITH_NOTIFY);
-        send_cluster_message(NULL, crm_msg_stonith_ng, reply, FALSE);
+            crm_xml_add(reply, F_SUBTYPE, "broadcast");
+            crm_xml_add(reply, F_STONITH_OPERATION, T_STONITH_NOTIFY);
+            send_cluster_message(NULL, crm_msg_stonith_ng, reply, FALSE);
+        } else {
+//YAMAUCHI
+            check_async_reply_t *async_op = NULL;
+            if (check_async_reply_list == NULL) {
+                check_async_reply_list = pcmk__strkey_table(free, free);
+            }
+
+            async_op = calloc(1, sizeof(check_async_reply_t));
+            CRM_ASSERT(async_op != NULL);
+            async_op->remote_op_id = strdup(cmd->remote_op_id);
+            async_op->reply = copy_xml(reply);
+            async_op->timeout = cmd->timeout;
+            async_op->timer = mainloop_timer_add("check_async_reply", async_op->timeout * 1000, FALSE, check_async_reply_cb, async_op);
+
+            g_hash_table_replace(check_async_reply_list, async_op->remote_op_id, async_op);
+crm_info("#### YAMAUCHI Start check Async reply timer. op = %s timeout = %d", async_op->remote_op_id, async_op->timeout * 1000); 
+            mainloop_timer_start(async_op->timer);
+
+	    stonith_send_reply(reply, cmd->options, cmd->origin, cmd->client);
+        }
     } else {
         // Reply only to the originator
         stonith_send_reply(reply, cmd->options, cmd->origin, cmd->client);

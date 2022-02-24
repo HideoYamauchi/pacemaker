@@ -75,6 +75,8 @@ typedef struct {
 } peer_device_info_t;
 
 GHashTable *stonith_remote_op_list = NULL;
+//YAMAUCHI
+GHashTable *check_async_reply_list = NULL;
 
 extern xmlNode *stonith_create_op(int call_id, const char *token, const char *op, xmlNode * data,
                                   int call_options);
@@ -356,6 +358,27 @@ undo_op_remap(remote_fencing_op_t *op)
     }
 }
 
+static void 
+clear_check_async_reply(remote_fencing_op_t * op)
+{
+    check_async_reply_t *async_reply_op = NULL;
+
+    if (check_async_reply_list == NULL) {
+crm_info("##### YAMAUCHI clear_check_async_reply. NULL return op = %s", op->id);
+        return;
+    }
+crm_info("##### YAMAUCHI clear_check_async_reply. op = %s", op->id);
+    async_reply_op = g_hash_table_lookup(check_async_reply_list, op->id);    
+    if (async_reply_op) {
+        if (async_reply_op->timer){
+crm_info("##### YAMAUCHI timer stop. op = %s", op->id);
+            mainloop_timer_del(async_reply_op->timer);
+        }
+crm_info("##### YAMAUCHI remove check_async. op = %s", op->id);
+        g_hash_table_remove(check_async_reply_list, op->id);
+    }
+}
+
 /*!
  * \internal
  * \brief Create notification data XML for a fencing operation result
@@ -543,6 +566,9 @@ finalize_op(remote_fencing_op_t *op, xmlNode *data, bool dup)
     set_fencing_completed(op);
     clear_remote_op_timers(op);
     undo_op_remap(op);
+//YAMAUCHI
+    clear_check_async_reply(op);
+
 
     if (data == NULL) {
         data = create_xml_node(NULL, "remote-op");
