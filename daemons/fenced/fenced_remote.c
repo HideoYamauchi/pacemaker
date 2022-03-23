@@ -76,6 +76,9 @@ typedef struct {
 
 GHashTable *stonith_remote_op_list = NULL;
 
+//YAMAUCHI
+GHashTable *check_async_reply_list = NULL;
+
 extern xmlNode *stonith_create_op(int call_id, const char *token, const char *op, xmlNode * data,
                                   int call_options);
 
@@ -501,6 +504,27 @@ delegate_from_xml(xmlNode *xml)
     }
 }
 
+static void 
+clear_check_async_reply(remote_fencing_op_t * op)
+{
+    check_async_reply_t *async_reply_op = NULL;
+
+    if (check_async_reply_list == NULL) {
+crm_info("##### YAMAUCHI clear_check_async_reply. NULL return op = %s", op->id);
+        return;
+    }
+crm_info("##### YAMAUCHI clear_check_async_reply. op = %s", op->id);
+    async_reply_op = g_hash_table_lookup(check_async_reply_list, op->id);    
+    if (async_reply_op) {
+        if (async_reply_op->timer){
+crm_info("##### YAMAUCHI timer stop. op = %s", op->id);
+            mainloop_timer_del(async_reply_op->timer);
+        }
+crm_info("##### YAMAUCHI remove check_async. op = %s", op->id);
+        g_hash_table_remove(check_async_reply_list, op->id);
+    }
+}
+
 /*!
  * \internal
  * \brief Finalize a peer fencing operation
@@ -543,6 +567,9 @@ finalize_op(remote_fencing_op_t *op, xmlNode *data, bool dup)
     set_fencing_completed(op);
     clear_remote_op_timers(op);
     undo_op_remap(op);
+
+//YAMAUCHI
+    clear_check_async_reply(op);
 
     if (data == NULL) {
         data = create_xml_node(NULL, "remote-op");
@@ -2172,6 +2199,29 @@ process_remote_stonith_query(xmlNode * msg)
     return pcmk_ok;
 }
 
+//YAMAUCHI
+static gboolean
+check_async_reply_cb(gpointer data)
+{
+    remote_fencing_op_t *op = NULL;
+    check_async_reply_t *a = data;
+    crm_trace("Async reply timeout. %s", a->remote_op_id);
+
+    crm_info("#### YAMAUCHI #### Async reply timeout. %s", a->remote_op_id);
+    //Local op failed.
+    if (stonith_remote_op_list) {
+        op = g_hash_table_lookup(stonith_remote_op_list, a->remote_op_id);
+        if (op != NULL) {
+            //TODO:result Set
+            //pcmk__reset_result(&op->result);
+            //op->result = result;
+            op->state = st_failed;
+            finalize_op(op, a->msg, false);
+        }
+    }
+    return FALSE;
+}
+
 /*!
  * \internal
  * \brief Handle a peer's reply to a fencing request
@@ -2253,8 +2303,23 @@ fenced_process_fencing_reply(xmlNode *msg)
             /* fall-through and attempt other fencing action using another peer */
             crm_info("#### YAMAUCHI #### fall-through and attempt other fencing action using another peer"); 
         } else {
-            //TODO: Set wait error or done timer set
+            check_async_reply_t *async_op = NULL;
+
             crm_info("#### YAMAUCHI #### Get Message broadcast-no-topology-origin-fence-error non originator nodes"); 
+            if (check_async_reply_list == NULL) {
+                check_async_reply_list = pcmk__strkey_table(free, free);
+            }
+
+            async_op = calloc(1, sizeof(check_async_reply_t));
+            CRM_ASSERT(async_op != NULL);
+            async_op->remote_op_id = crm_element_value_copy(msg, F_STONITH_REMOTE_OP_ID);
+            async_op->msg = copy_xml(msg);
+            crm_element_value_int(msg, F_STONITH_TIMEOUT, &(async_op->timeout));
+            async_op->timer = mainloop_timer_add("check_async_reply", async_op->timeout * 1000, FALSE, check_async_reply_cb, async_op);
+
+            g_hash_table_replace(check_async_reply_list, async_op->remote_op_id, async_op);
+            crm_info("#### YAMAUCHI Start check Async reply timer. op = %s timeout = %d", async_op->remote_op_id, async_op->timeout * 1000); 
+            mainloop_timer_start(async_op->timer);
             return;
         }
     } else if (!pcmk__str_eq(op->originator, stonith_our_uname, pcmk__str_casei)) {
