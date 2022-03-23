@@ -2212,7 +2212,7 @@ check_async_reply_cb(gpointer data)
     if (stonith_remote_op_list) {
         op = g_hash_table_lookup(stonith_remote_op_list, a->remote_op_id);
         if (op != NULL) {
-            //TODO:result Set
+            //No need result Set. because already set fenced_process_fencing_reply().
             //pcmk__reset_result(&op->result);
             //op->result = result;
             op->state = st_failed;
