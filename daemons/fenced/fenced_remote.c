@@ -2247,6 +2247,16 @@ fenced_process_fencing_reply(xmlNode *msg)
         finalize_op(op, msg, false);
         return;
 
+    } else if (pcmk__str_eq(crm_element_value(msg, F_SUBTYPE), "broadcast-no-topology-origin-fence-error", pcmk__str_casei)) {
+//YAMAUCHI
+        if (pcmk__str_eq(op->originator, stonith_our_uname, pcmk__str_casei)) {
+            /* fall-through and attempt other fencing action using another peer */
+            crm_info("#### YAMAUCHI #### fall-through and attempt other fencing action using another peer"); 
+        } else {
+            //TODO: Set wait error or done timer set
+            crm_info("#### YAMAUCHI #### Get Message broadcast-no-topology-origin-fence-error non originator nodes"); 
+            return;
+        }
     } else if (!pcmk__str_eq(op->originator, stonith_our_uname, pcmk__str_casei)) {
         /* If this isn't a remote level broadcast, and we are not the
          * originator of the operation, we should not be receiving this msg. */

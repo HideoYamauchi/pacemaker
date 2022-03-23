@@ -2482,7 +2482,12 @@ send_async_reply(async_command_t *cmd, const pcmk__action_result_t *result,
          */
         crm_trace("Broadcast '%s' result for %s (target was also originator)",
                   cmd->action, cmd->victim);
-        crm_xml_add(reply, F_SUBTYPE, "broadcast");
+//YAMAUCHI
+        if (result->exit_status == CRM_EX_OK) {
+            crm_xml_add(reply, F_SUBTYPE, "broadcast");
+        } else {
+            crm_xml_add(reply, F_SUBTYPE, "broadcast-no-topology-origin-fence-error");
+        }
         crm_xml_add(reply, F_STONITH_OPERATION, T_STONITH_NOTIFY);
         send_cluster_message(NULL, crm_msg_stonith_ng, reply, FALSE);
     } else {
