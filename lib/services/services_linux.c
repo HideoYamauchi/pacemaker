@@ -449,7 +449,6 @@ pipe_in_single_parameter(gpointer key, gpointer value, gpointer user_data)
 
     do {
         errno = 0;
-crm_info("### YAMAUCHI %s=%s", (char *)key, (char *) value);
         ret = write(op->opaque->stdin_fd, buffer + total, len - total);
         if (ret > 0) {
             total += ret;
