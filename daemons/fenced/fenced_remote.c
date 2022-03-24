@@ -2321,18 +2321,20 @@ fenced_process_fencing_reply(xmlNode *msg)
                 crm_info("#### YAMAUCHI #### fall-through and attempt other fencing action using another peer"); 
             } else {
                 char *remote_op_id = NULL;
+                check_async_reply_t *find = NULL;
 
-                crm_info("#### YAMAUCHI #### Get Message broadcast-no-topology-origin-fence-error non originator nodes"); 
                 if (check_async_reply_list == NULL) {
                     check_async_reply_list = pcmk__strkey_table(NULL, free_check_async_reply);
                 }
                 remote_op_id = crm_element_value_copy(msg, F_STONITH_REMOTE_OP_ID);
 
-                op = g_hash_table_lookup(check_async_reply_list, remote_op_id);
-                if (op == NULL) {
+                find = g_hash_table_lookup(check_async_reply_list, remote_op_id);
+                if (find == NULL) {
                     check_async_reply_t *async_op = NULL;
                     long long completed;
                     long long completed_nsec = 0L;
+
+                    crm_info("#### YAMAUCHI #### Get Message broadcast-no-topology-origin-fence-error non originator nodes. Create"); 
 
                     async_op = calloc(1, sizeof(check_async_reply_t));
                     CRM_ASSERT(async_op != NULL);
@@ -2348,6 +2350,17 @@ fenced_process_fencing_reply(xmlNode *msg)
                     g_hash_table_replace(check_async_reply_list, async_op->remote_op_id, async_op);
                     crm_info("#### YAMAUCHI Start check Async reply timer. op = %s timeout = %d", async_op->remote_op_id, async_op->timeout * 1000); 
                     async_op->timer = g_timeout_add(async_op->timeout * 1000, check_async_reply_cb, async_op);
+                } else {
+                    long long completed;
+                    long long completed_nsec = 0L;
+
+                    crm_info("#### YAMAUCHI #### Get Message broadcast-no-topology-origin-fence-error non originator nodes. Replace"); 
+
+                    crm_element_value_ll(msg, F_STONITH_DATE, &completed);
+                    find->completed = (time_t)completed;
+                    crm_element_value_ll(msg, F_STONITH_DATE_NSEC, &completed_nsec);
+                    find->completed_nsec = completed_nsec;
+                    g_hash_table_replace(check_async_reply_list, find->remote_op_id, find);
                 }
                 return;
             }
