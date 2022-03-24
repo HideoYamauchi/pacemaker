@@ -2311,7 +2311,10 @@ fenced_process_fencing_reply(xmlNode *msg)
 
     if (pcmk__str_eq(crm_element_value(msg, F_SUBTYPE), "broadcast", pcmk__str_casei)) {
 //YAMAUCHI
-        if (!pcmk__result_ok(&op->result) && pcmk__str_eq(op->originator, op->target, pcmk__str_casei)) {
+        const char *type = NULL;
+        
+        type = crm_element_value(msg, F_TYPE);
+        if (!pcmk__result_ok(&op->result) && pcmk__str_eq(type, T_STONITH_NG, pcmk__str_casei) && pcmk__str_eq(op->originator, op->target, pcmk__str_casei)) {
             crm_info("#### YAMAUCHI #### originator : %s target : %s", op->originator, op->target);
             if (pcmk__str_eq(op->originator, stonith_our_uname, pcmk__str_casei)) {
                 /* fall-through and attempt other fencing action using another peer */
