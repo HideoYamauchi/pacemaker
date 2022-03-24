@@ -2305,21 +2305,55 @@ fenced_process_fencing_reply(xmlNode *msg)
     }
 
     if (pcmk__str_eq(crm_element_value(msg, F_SUBTYPE), "broadcast", pcmk__str_casei)) {
-        crm_debug("Finalizing action '%s' targeting %s on behalf of %s@%s: %s%s%s%s "
+//YAMAUCHI
+        if (!pcmk__result_ok(&op->result) && pcmk__str_eq(op->originator, op->target, pcmk__str_casei)) {
+            crm_info("#### YAMAUCHI #### originator : %s target : %s", op->originator, op->target);
+            if (pcmk__str_eq(op->originator, stonith_our_uname, pcmk__str_casei)) {
+                /* fall-through and attempt other fencing action using another peer */
+                crm_info("#### YAMAUCHI #### fall-through and attempt other fencing action using another peer"); 
+            } else {
+                check_async_reply_t *async_op = NULL;
+                char *remote_op_id = NULL;
+
+                crm_info("#### YAMAUCHI #### Get Message broadcast-no-topology-origin-fence-error non originator nodes"); 
+                if (check_async_reply_list == NULL) {
+                    check_async_reply_list = pcmk__strkey_table(NULL, free_check_async_reply);
+                }
+                remote_op_id = crm_element_value_copy(msg, F_STONITH_REMOTE_OP_ID);
+
+                op = g_hash_table_lookup(check_async_reply_list, remote_op_id);
+                if (op == NULL) {
+                    async_op = calloc(1, sizeof(check_async_reply_t));
+                    CRM_ASSERT(async_op != NULL);
+
+                    async_op->remote_op_id = strdup(remote_op_id);
+                    async_op->msg = copy_xml(msg);
+                    crm_element_value_int(msg, F_STONITH_TIMEOUT, &(async_op->timeout));
+
+                    g_hash_table_replace(check_async_reply_list, async_op->remote_op_id, async_op);
+                    crm_info("#### YAMAUCHI Start check Async reply timer. op = %s timeout = %d", async_op->remote_op_id, async_op->timeout * 1000); 
+                    async_op->timer = g_timeout_add(async_op->timeout * 1000, check_async_reply_cb, async_op);
+                }
+                return;
+            }
+        } else { 
+            crm_debug("Finalizing action '%s' targeting %s on behalf of %s@%s: %s%s%s%s "
                   CRM_XS " id=%.8s",
                   op->action, op->target, op->client_name, op->originator,
                   pcmk_exec_status_str(op->result.execution_status),
                   (op->result.exit_reason == NULL)? "" : " (",
                   (op->result.exit_reason == NULL)? "" : op->result.exit_reason,
                   (op->result.exit_reason == NULL)? "" : ")", op->id);
-        if (pcmk__result_ok(&op->result)) {
-            op->state = st_done;
-        } else {
-            op->state = st_failed;
+            if (pcmk__result_ok(&op->result)) {
+                op->state = st_done;
+            } else {
+                op->state = st_failed;
+            }
+            finalize_op(op, msg, false);
+            return;
         }
-        finalize_op(op, msg, false);
-        return;
-
+//YAMAUCHI
+#if 0 
     } else if (pcmk__str_eq(crm_element_value(msg, F_SUBTYPE), "broadcast-no-topology-origin-fence-error", pcmk__str_casei)) {
 //YAMAUCHI
         if (pcmk__str_eq(op->originator, stonith_our_uname, pcmk__str_casei)) {
@@ -2350,6 +2384,7 @@ fenced_process_fencing_reply(xmlNode *msg)
             }
             return;
         }
+#endif
     } else if (!pcmk__str_eq(op->originator, stonith_our_uname, pcmk__str_casei)) {
         /* If this isn't a remote level broadcast, and we are not the
          * originator of the operation, we should not be receiving this msg. */
