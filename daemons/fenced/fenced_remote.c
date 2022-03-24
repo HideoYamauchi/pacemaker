@@ -84,7 +84,7 @@ extern xmlNode *stonith_create_op(int call_id, const char *token, const char *op
 
 static void request_peer_fencing(remote_fencing_op_t *op,
                                  peer_device_info_t *peer);
-static void finalize_op(remote_fencing_op_t *op, xmlNode *data, bool dup);
+static void finalize_op(remote_fencing_op_t *op, xmlNode *data, bool dup, bool fencing_completed);
 static void report_timeout_period(remote_fencing_op_t * op, int op_timeout);
 static int get_op_total_timeout(const remote_fencing_op_t *op,
                                 const peer_device_info_t *chosen_peer);
@@ -503,7 +503,7 @@ finalize_op_duplicates(remote_fencing_op_t *op, xmlNode *data)
                       pcmk_exec_status_str(op->result.execution_status),
                       other->id);
             pcmk__copy_result(&op->result, &other->result);
-            finalize_op(other, data, true);
+            finalize_op(other, data, true, false);
 
         } else {
             // Possible if (for example) it timed out already
@@ -565,7 +565,7 @@ crm_info("##### YAMAUCHI remove check_async. op = %s", op->id);
  *  \note The operation result should be set before calling this function.
  */
 static void
-finalize_op(remote_fencing_op_t *op, xmlNode *data, bool dup)
+finalize_op(remote_fencing_op_t *op, xmlNode *data, bool dup, bool fencing_completed)
 {
     int level = LOG_ERR;
     const char *subt = NULL;
@@ -587,7 +587,9 @@ finalize_op(remote_fencing_op_t *op, xmlNode *data, bool dup)
         return;
     }
 
-    set_fencing_completed(op);
+    if (!fencing_completed) {
+        set_fencing_completed(op);
+    }
     clear_remote_op_timers(op);
     undo_op_remap(op);
 
@@ -685,7 +687,7 @@ remote_op_watchdog_done(gpointer userdata)
                op->action, op->target, op->client_name, op->id);
     op->state = st_done;
     pcmk__set_result(&op->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
-    finalize_op(op, NULL, false);
+    finalize_op(op, NULL, false, false);
     return G_SOURCE_REMOVE;
 }
 
@@ -733,7 +735,7 @@ finalize_timed_out_op(remote_fencing_op_t *op, const char *reason)
         op->state = st_failed;
         pcmk__set_result(&op->result, CRM_EX_ERROR, PCMK_EXEC_TIMEOUT, reason);
     }
-    finalize_op(op, NULL, false);
+    finalize_op(op, NULL, false, false);
 }
 
 /*!
@@ -1134,7 +1136,7 @@ fenced_handle_manual_confirmation(pcmk__client_t *client, xmlNode *msg)
 
     // For the fencer's purposes, the fencing operation is done
     pcmk__set_result(&op->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
-    finalize_op(op, msg, false);
+    finalize_op(op, msg, false, false);
 
     /* For the requester's purposes, the operation is still pending. The
      * actual result will be sent asynchronously via the operation's done_cb().
@@ -1317,7 +1319,7 @@ initiate_remote_stonith_op(pcmk__client_t *client, xmlNode *request,
                              "All topology levels failed");
             crm_warn("Could not request peer fencing (%s) targeting %s "
                      CRM_XS " id=%.8s", op->action, op->target, op->id);
-            finalize_op(op, NULL, false);
+            finalize_op(op, NULL, false, false);
             return op;
 
         case st_duplicate:
@@ -1687,7 +1689,7 @@ advance_topology_device_in_level(remote_fencing_op_t *op, const char *device,
         crm_trace("Marking complex fencing op targeting %s as complete",
                   op->target);
         op->state = st_done;
-        finalize_op(op, msg, false);
+        finalize_op(op, msg, false, false);
     }
 }
 
@@ -1891,7 +1893,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
         }
 
         op->state = st_failed;
-        finalize_op(op, NULL, false);
+        finalize_op(op, NULL, false, false);
 
     } else {
         crm_info("Waiting for additional peers capable of fencing (%s) %s%s%s "
@@ -2239,7 +2241,10 @@ check_async_reply_cb(gpointer data)
             //pcmk__reset_result(&op->result);
             //op->result = result;
             op->state = st_failed;
-            finalize_op(op, a->msg, false);
+            op->completed = a->completed;
+            op->completed_nsec = a->completed_nsec;
+
+            finalize_op(op, a->msg, false, true);
         }
     }
     return G_SOURCE_REMOVE;
@@ -2312,7 +2317,6 @@ fenced_process_fencing_reply(xmlNode *msg)
                 /* fall-through and attempt other fencing action using another peer */
                 crm_info("#### YAMAUCHI #### fall-through and attempt other fencing action using another peer"); 
             } else {
-                check_async_reply_t *async_op = NULL;
                 char *remote_op_id = NULL;
 
                 crm_info("#### YAMAUCHI #### Get Message broadcast-no-topology-origin-fence-error non originator nodes"); 
@@ -2323,12 +2327,20 @@ fenced_process_fencing_reply(xmlNode *msg)
 
                 op = g_hash_table_lookup(check_async_reply_list, remote_op_id);
                 if (op == NULL) {
+                    check_async_reply_t *async_op = NULL;
+                    long long completed;
+                    long long completed_nsec = 0L;
+
                     async_op = calloc(1, sizeof(check_async_reply_t));
                     CRM_ASSERT(async_op != NULL);
 
                     async_op->remote_op_id = strdup(remote_op_id);
                     async_op->msg = copy_xml(msg);
                     crm_element_value_int(msg, F_STONITH_TIMEOUT, &(async_op->timeout));
+                    crm_element_value_ll(msg, F_STONITH_DATE, &completed);
+                    async_op->completed = (time_t)completed;
+                    crm_element_value_ll(msg, F_STONITH_DATE_NSEC, &completed_nsec);
+                    async_op->completed_nsec = completed_nsec;
 
                     g_hash_table_replace(check_async_reply_list, async_op->remote_op_id, async_op);
                     crm_info("#### YAMAUCHI Start check Async reply timer. op = %s timeout = %d", async_op->remote_op_id, async_op->timeout * 1000); 
@@ -2349,7 +2361,7 @@ fenced_process_fencing_reply(xmlNode *msg)
             } else {
                 op->state = st_failed;
             }
-            finalize_op(op, msg, false);
+            finalize_op(op, msg, false, false);
             return;
         }
 //YAMAUCHI
@@ -2408,7 +2420,7 @@ fenced_process_fencing_reply(xmlNode *msg)
         /* We own the op, and it is complete. broadcast the result to all nodes
          * and notify our local clients. */
         if (op->state == st_done) {
-            finalize_op(op, msg, false);
+            finalize_op(op, msg, false, false);
             return;
         }
 
@@ -2435,7 +2447,7 @@ fenced_process_fencing_reply(xmlNode *msg)
              * levels are available, mark this operation as failed and report results. */
             if (advance_topology_level(op, false) != pcmk_rc_ok) {
                 op->state = st_failed;
-                finalize_op(op, msg, false);
+                finalize_op(op, msg, false, false);
                 return;
             }
         }
@@ -2443,14 +2455,14 @@ fenced_process_fencing_reply(xmlNode *msg)
     } else if (pcmk__result_ok(&op->result) && (op->devices == NULL)) {
         crm_trace("All done for %s", op->target);
         op->state = st_done;
-        finalize_op(op, msg, false);
+        finalize_op(op, msg, false, false);
         return;
 
     } else if ((op->result.execution_status == PCMK_EXEC_TIMEOUT)
                && (op->devices == NULL)) {
         /* If the operation timed out don't bother retrying other peers. */
         op->state = st_failed;
-        finalize_op(op, msg, false);
+        finalize_op(op, msg, false, false);
         return;
 
     } else {
