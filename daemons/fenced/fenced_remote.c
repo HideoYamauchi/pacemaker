@@ -116,6 +116,15 @@ free_stonith_remote_op_list()
     }
 }
 
+void
+free_check_async_reply_list()
+{
+    if (check_async_reply_list != NULL) {
+        g_hash_table_destroy(check_async_reply_list);
+        check_async_reply_list = NULL;
+    }
+}
+
 struct peer_count_data {
     const remote_fencing_op_t *op;
     gboolean verified_only;
@@ -264,6 +273,20 @@ free_remote_op(gpointer data)
 
     pcmk__reset_result(&op->result);
     free(op);
+}
+
+static void 
+free_check_async_reply(gpointer data)
+{
+    check_async_reply_t *async = data;
+
+    if (async->timer) {
+        g_source_remove(async->timer);
+        async->timer = 0;
+    }
+
+    free(async->remote_op_id);
+    free_xml(async->msg);
 }
 
 void
@@ -518,7 +541,7 @@ crm_info("##### YAMAUCHI clear_check_async_reply. op = %s", op->id);
     if (async_reply_op) {
         if (async_reply_op->timer){
 crm_info("##### YAMAUCHI timer stop. op = %s", op->id);
-            mainloop_timer_del(async_reply_op->timer);
+            g_source_remove(async_reply_op->timer);
         }
 crm_info("##### YAMAUCHI remove check_async. op = %s", op->id);
         g_hash_table_remove(check_async_reply_list, op->id);
@@ -2219,7 +2242,7 @@ check_async_reply_cb(gpointer data)
             finalize_op(op, a->msg, false);
         }
     }
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 /*!
@@ -2304,22 +2327,27 @@ fenced_process_fencing_reply(xmlNode *msg)
             crm_info("#### YAMAUCHI #### fall-through and attempt other fencing action using another peer"); 
         } else {
             check_async_reply_t *async_op = NULL;
+            char *remote_op_id = NULL;
 
             crm_info("#### YAMAUCHI #### Get Message broadcast-no-topology-origin-fence-error non originator nodes"); 
             if (check_async_reply_list == NULL) {
-                check_async_reply_list = pcmk__strkey_table(free, free);
+                check_async_reply_list = pcmk__strkey_table(NULL, free_check_async_reply);
             }
+            remote_op_id = crm_element_value_copy(msg, F_STONITH_REMOTE_OP_ID);
 
-            async_op = calloc(1, sizeof(check_async_reply_t));
-            CRM_ASSERT(async_op != NULL);
-            async_op->remote_op_id = crm_element_value_copy(msg, F_STONITH_REMOTE_OP_ID);
-            async_op->msg = copy_xml(msg);
-            crm_element_value_int(msg, F_STONITH_TIMEOUT, &(async_op->timeout));
-            async_op->timer = mainloop_timer_add("check_async_reply", async_op->timeout * 1000, FALSE, check_async_reply_cb, async_op);
+            op = g_hash_table_lookup(check_async_reply_list, remote_op_id);
+            if (op == NULL) {
+                async_op = calloc(1, sizeof(check_async_reply_t));
+                CRM_ASSERT(async_op != NULL);
 
-            g_hash_table_replace(check_async_reply_list, async_op->remote_op_id, async_op);
-            crm_info("#### YAMAUCHI Start check Async reply timer. op = %s timeout = %d", async_op->remote_op_id, async_op->timeout * 1000); 
-            mainloop_timer_start(async_op->timer);
+                async_op->remote_op_id = strdup(remote_op_id);
+                async_op->msg = copy_xml(msg);
+                crm_element_value_int(msg, F_STONITH_TIMEOUT, &(async_op->timeout));
+
+                g_hash_table_replace(check_async_reply_list, async_op->remote_op_id, async_op);
+                crm_info("#### YAMAUCHI Start check Async reply timer. op = %s timeout = %d", async_op->remote_op_id, async_op->timeout * 1000); 
+                async_op->timer = g_timeout_add(async_op->timeout * 1000, check_async_reply_cb, async_op);
+            }
             return;
         }
     } else if (!pcmk__str_eq(op->originator, stonith_our_uname, pcmk__str_casei)) {

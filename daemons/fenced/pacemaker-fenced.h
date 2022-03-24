@@ -209,7 +209,7 @@ typedef struct check_async_reply {
     char *remote_op_id;
     xmlNode *msg; 
     int timeout; /* seconds */
-    mainloop_timer_t *timer;
+    guint timer;
 
 } check_async_reply_t;
 
@@ -218,6 +218,7 @@ void free_device_list(void);
 void init_topology_list(void);
 void free_topology_list(void);
 void free_stonith_remote_op_list(void);
+void free_check_async_reply_list(void);
 void init_stonith_remote_op_hash_table(GHashTable **table);
 void free_metadata_cache(void);
 
