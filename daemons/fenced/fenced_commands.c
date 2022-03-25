@@ -2480,11 +2480,25 @@ send_async_reply(async_command_t *cmd, const pcmk__action_result_t *result,
         /* The target was also the originator, so broadcast the result on its
          * behalf (since it will be unable to).
          */
+        remote_fencing_op_t *op = NULL;
+        
         crm_trace("Broadcast '%s' result for %s (target was also originator)",
                   cmd->action, cmd->victim);
+
+        op = calloc(1, sizeof(remote_fencing_op_t));
+        CRM_ASSERT(op != NULL);
+        set_fencing_completed(op); 
+
         crm_xml_add(reply, F_SUBTYPE, "broadcast");
+//YAMAUCHI
+        crm_xml_add_int(reply, F_STONITH_TIMEOUT, cmd->timeout);
         crm_xml_add(reply, F_STONITH_OPERATION, T_STONITH_NOTIFY);
+        crm_xml_add_ll(reply, F_STONITH_DATE, op->completed);
+        crm_xml_add_ll(reply, F_STONITH_DATE_NSEC, op->completed_nsec);
+        
         send_cluster_message(NULL, crm_msg_stonith_ng, reply, FALSE);
+        free(op);
+        
     } else {
         // Reply only to the originator
         stonith_send_reply(reply, cmd->options, cmd->origin, cmd->client);
