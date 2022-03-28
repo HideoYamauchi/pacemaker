@@ -207,7 +207,7 @@ typedef struct stonith_topology_s {
 typedef struct check_async_reply {
 
     char *remote_op_id;
-    xmlNode *msg; 
+    xmlNode *msg;
     time_t completed;
     long long completed_nsec;
     int timeout; /* seconds */
