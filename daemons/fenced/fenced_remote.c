@@ -1523,8 +1523,9 @@ get_op_total_timeout(const remote_fencing_op_t *op,
     } else {
         total_timeout = op->base_timeout;
     }
+crm_info("#### YAMAUCHI #### op->delay : %d", op->delay);
 
-    return total_timeout ? total_timeout : op->base_timeout;
+    return total_timeout ? total_timeout + op->delay : op->base_timeout + op->delay;
 }
 
 static void
@@ -1673,6 +1674,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
 {
     const char *device = NULL;
     int timeout;
+    int delay_timeout_add_once = 0;
 
     CRM_CHECK(op != NULL, return);
 
@@ -1687,10 +1689,14 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
     if (!op->op_timer_total) {
         int total_timeout = get_op_total_timeout(op, peer);
 
+        delay_timeout_add_once = op->delay; /* The first fencing operation considers the priority-fencing-delay set in op->delay. */
         op->total_timeout = TIMEOUT_MULTIPLY_FACTOR * total_timeout;
         op->op_timer_total = g_timeout_add(1000 * op->total_timeout, remote_op_timeout, op);
         report_timeout_period(op, op->total_timeout);
         crm_info("Total timeout set to %d for peer's fencing targeting %s for %s"
+                 CRM_XS "id=%.8s",
+                 total_timeout, op->target, op->client_name, op->id);
+        crm_info("#### YAMAUCHI #### Total timeout set to %d for peer's fencing targeting %s for %s"
                  CRM_XS "id=%.8s",
                  total_timeout, op->target, op->client_name, op->id);
     }
@@ -1726,7 +1732,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
 
         if (device) {
             timeout_one = TIMEOUT_MULTIPLY_FACTOR *
-                          get_device_timeout(op, peer, device);
+                          (get_device_timeout(op, peer, device) + delay_timeout_add_once);
             crm_notice("Requesting that %s perform '%s' action targeting %s "
                        "using %s " CRM_XS " for client %s (%ds)",
                        peer->host, op->action, op->target, device,
@@ -1734,7 +1740,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
             crm_xml_add(remote_op, F_STONITH_DEVICE, device);
 
         } else {
-            timeout_one = TIMEOUT_MULTIPLY_FACTOR * get_peer_timeout(op, peer);
+            timeout_one = TIMEOUT_MULTIPLY_FACTOR * (get_peer_timeout(op, peer) + delay_timeout_add_once);
             crm_notice("Requesting that %s perform '%s' action targeting %s "
                        CRM_XS " for client %s (%ds, %lds)",
                        peer->host, op->action, op->target, op->client_name,
@@ -1771,6 +1777,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
                  least is questionable.
              */
             op->op_timer_one = g_timeout_add((1000 * timeout_one), remote_op_timeout_one, op);
+crm_info("### YAMAUCHI op_timer_one Set : timeout_one : %d ###", timeout_one);
         }
 
         send_cluster_message(crm_get_peer(0, peer->host), crm_msg_stonith_ng, remote_op, FALSE);
