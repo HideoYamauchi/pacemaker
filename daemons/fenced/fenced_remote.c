@@ -544,7 +544,7 @@ crm_info("##### YAMAUCHI timer stop. op = %s", op->id);
             g_source_remove(async_reply_op->timer);
         }
 crm_info("##### YAMAUCHI remove check_async. op = %s", op->id);
-        g_hash_table_remove(check_async_reply_list, op->id);
+        g_hash_table_remove(check_async_reply_list, async_reply_op->remote_op_id);
     }
 }
 
@@ -2290,7 +2290,6 @@ handles_dcnode_fencing_failures_no_topology(xmlNode *msg, remote_fencing_op_t *o
             async_op->completed = (time_t)completed;
             crm_element_value_ll(msg, F_STONITH_DATE_NSEC, &completed_nsec);
             async_op->completed_nsec = completed_nsec;
-            pcmk__xe_set_bool_attr(msg, F_STONITH_SET_COMPLETED, false);
 
             g_hash_table_replace(check_async_reply_list, async_op->remote_op_id, async_op);
 
