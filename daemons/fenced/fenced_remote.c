@@ -2252,7 +2252,7 @@ check_async_reply_cb(gpointer data)
 }
 //YAMAUCHI
 static gboolean
-handles_DCnode_fencing_failures_no_topology(xmlNode *msg, remote_fencing_op_t *op)
+handles_dcnode_fencing_failures_no_topology(xmlNode *msg, remote_fencing_op_t *op)
 {
     gboolean fall_through = TRUE;
 
@@ -2377,7 +2377,7 @@ fenced_process_fencing_reply(xmlNode *msg)
             pcmk__str_eq(op->originator, op->target, pcmk__str_casei)) {
             /* Handles escalation from fencing failures on DC nodes that do not have a topology. */
             /* Only T_STONITH_NG is processed from send_async_reply(). */
-            if (!handles_DCnode_fencing_failures_no_topology(msg, op)) {
+            if (!handles_dcnode_fencing_failures_no_topology(msg, op)) {
                 return;
             }
             /* fall-through and attempt other fencing action using another peer */
