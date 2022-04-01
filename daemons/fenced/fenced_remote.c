@@ -2251,23 +2251,7 @@ check_async_reply_cb(gpointer data)
     }
     return FALSE;
 }
-//YAMAUCHI
-static void
-sysrq_trigger(char t)
-{
-#if SUPPORT_PROCFS
-    FILE *procf;    // Root can always write here, regardless of kernel.sysrq value
-    procf = fopen("/proc/sysrq-trigger", "a");
-    if (!procf) {
-        crm_perror(LOG_WARNING, "Opening sysrq-trigger failed");
-        return;
-    }
-    crm_info("sysrq-trigger: %c", t);
-    fprintf(procf, "%c\n", t);
-    fclose(procf);
-#endif // SUPPORT_PROCFS
-    return;
-}
+
 //YAMAUCHI
 static gboolean
 handles_dcnode_fencing_failures_no_topology(xmlNode *msg, remote_fencing_op_t *op)
@@ -2279,7 +2263,6 @@ handles_dcnode_fencing_failures_no_topology(xmlNode *msg, remote_fencing_op_t *o
     if (pcmk__str_eq(op->originator, stonith_our_uname, pcmk__str_casei)) {
         /* fall-through and attempt other fencing action using another peer */
         crm_info("#### YAMAUCHI #### fall-through and attempt other fencing action using another peer"); 
-sysrq_trigger('b');
     } else {
         /* If the DC node goes down, set a timer to monitor the fencing failure so that it will not be pending. */
         long long completed;
