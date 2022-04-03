@@ -2267,16 +2267,15 @@ handles_dcnode_fencing_failures_no_topology(xmlNode *msg, remote_fencing_op_t *o
         /* If the DC node goes down, set a timer to monitor the fencing failure so that it will not be pending. */
         long long completed;
         long long completed_nsec = 0L;
-        check_async_reply_t *hash_value = NULL;
+        check_async_reply_t *async_op = NULL;
 
         if (check_async_reply_list == NULL) {
             check_async_reply_list = pcmk__strkey_table(NULL, free_check_async_reply);
         }
 
-        hash_value = g_hash_table_lookup(check_async_reply_list, op->id);
-        if (hash_value == NULL) {
+        async_op = g_hash_table_lookup(check_async_reply_list, op->id);
+        if (async_op == NULL) {
             /* Generate a timer to monitor the response. */
-            check_async_reply_t *async_op = NULL;
 
             crm_info("#### YAMAUCHI #### Get Message broadcast-no-topology-origin-fence-error non originator nodes. Create"); 
 
@@ -2291,8 +2290,6 @@ handles_dcnode_fencing_failures_no_topology(xmlNode *msg, remote_fencing_op_t *o
             crm_element_value_ll(msg, F_STONITH_DATE_NSEC, &completed_nsec);
             async_op->completed_nsec = completed_nsec;
 
-            g_hash_table_replace(check_async_reply_list, async_op->remote_op_id, async_op);
-
             crm_info("#### YAMAUCHI Start check Async reply timer. op = %s timeout = %d", async_op->remote_op_id, async_op->timeout * 1000); 
             async_op->timer = g_timeout_add(async_op->timeout * 1000, check_async_reply_cb, async_op);
         } else {
@@ -2300,12 +2297,12 @@ handles_dcnode_fencing_failures_no_topology(xmlNode *msg, remote_fencing_op_t *o
             crm_info("#### YAMAUCHI #### Get Message broadcast-no-topology-origin-fence-error non originator nodes. Replace"); 
 
             crm_element_value_ll(msg, F_STONITH_DATE, &completed);
-            hash_value->completed = (time_t)completed;
+            async_op->completed = (time_t)completed;
             crm_element_value_ll(msg, F_STONITH_DATE_NSEC, &completed_nsec);
-            hash_value->completed_nsec = completed_nsec;
+            async_op->completed_nsec = completed_nsec;
 
-            g_hash_table_replace(check_async_reply_list, hash_value->remote_op_id, hash_value);
         }
+        g_hash_table_replace(check_async_reply_list, async_op->remote_op_id, async_op);
         fall_through = FALSE;
     }
     return fall_through;
