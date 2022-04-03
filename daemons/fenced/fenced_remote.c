@@ -2292,6 +2292,8 @@ handles_dcnode_fencing_failures_no_topology(xmlNode *msg, remote_fencing_op_t *o
 
             crm_info("#### YAMAUCHI Start check Async reply timer. op = %s timeout = %d", async_op->remote_op_id, async_op->timeout * 1000); 
             async_op->timer = g_timeout_add(async_op->timeout * 1000, check_async_reply_cb, async_op);
+
+            g_hash_table_replace(check_async_reply_list, async_op->remote_op_id, async_op);
         } else {
             /* Update data at the time of failure of escalation fencing. */
             crm_info("#### YAMAUCHI #### Get Message broadcast-no-topology-origin-fence-error non originator nodes. Replace"); 
@@ -2300,9 +2302,7 @@ handles_dcnode_fencing_failures_no_topology(xmlNode *msg, remote_fencing_op_t *o
             async_op->completed = (time_t)completed;
             crm_element_value_ll(msg, F_STONITH_DATE_NSEC, &completed_nsec);
             async_op->completed_nsec = completed_nsec;
-
         }
-        g_hash_table_replace(check_async_reply_list, async_op->remote_op_id, async_op);
         fall_through = FALSE;
     }
     return fall_through;
