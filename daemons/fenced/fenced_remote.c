@@ -2240,13 +2240,20 @@ check_async_reply_cb(gpointer data)
 
         remote_op = g_hash_table_lookup(stonith_remote_op_list, a->remote_op_id);
         if (remote_op != NULL) {
+            xmlNode *msg;
+
             /* The op->result set is not needed as it is already set with fenced_process_fencing_reply(). */
             remote_op->state = st_failed;
             /* Set the time when it actually failed. */
             remote_op->completed = a->completed;
             remote_op->completed_nsec = a->completed_nsec;
+
             /* Set local operation information to failure. */
+            msg = copy_xml(a->msg);
+            pcmk__xe_set_bool_attr(msg, F_STONITH_SET_COMPLETED, false);
+
             finalize_op(remote_op, a->msg, false);
+            free_xml(msg);
         }
     }
     return FALSE;

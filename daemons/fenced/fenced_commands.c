@@ -2498,7 +2498,6 @@ send_async_reply(async_command_t *cmd, const pcmk__action_result_t *result,
             crm_xml_add_int(reply, F_STONITH_TIMEOUT, cmd->timeout);
             crm_xml_add_ll(reply, F_STONITH_DATE, op->completed);
             crm_xml_add_ll(reply, F_STONITH_DATE_NSEC, op->completed_nsec);
-            pcmk__xe_set_bool_attr(reply, F_STONITH_SET_COMPLETED, false);
 
             free(op);
         } 
