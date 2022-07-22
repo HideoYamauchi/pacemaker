@@ -203,9 +203,7 @@ typedef struct stonith_topology_s {
 
 } stonith_topology_t;
 
-//YAMAUCHI
 typedef struct check_async_reply {
-
     char *remote_op_id;
     xmlNode *msg;
     time_t completed;
@@ -301,5 +299,4 @@ extern long stonith_watchdog_timeout_ms;
 extern GList *stonith_watchdog_targets;
 
 extern GHashTable *stonith_remote_op_list;
-//YAMAUCHI
 extern GHashTable *check_async_reply_list;

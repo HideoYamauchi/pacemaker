@@ -2507,7 +2507,7 @@ send_async_reply(async_command_t *cmd, const pcmk__action_result_t *result,
                   cmd->action, cmd->victim);
         crm_xml_add(reply, F_SUBTYPE, "broadcast");
         crm_xml_add(reply, F_STONITH_OPERATION, T_STONITH_NOTIFY);
-//YAMAUCHI
+
         if (result->exit_status != CRM_EX_OK) {
             remote_fencing_op_t *op = NULL;
 
