@@ -546,8 +546,9 @@ crm_info("##### YAMAUCHI clear_check_async_reply. op = %s", op->id);
     async_reply_op = g_hash_table_lookup(check_async_reply_list, op->id);
     if (async_reply_op) {
         if (async_reply_op->timer){
-crm_info("##### YAMAUCHI timer stop. op = %s", op->id);
+crm_info("##### YAMAUCHI timer stop. op = %s(%d)", op->id, async_reply_op->timer);
             g_source_remove(async_reply_op->timer);
+            async_reply_op->timer = 0;
         }
 crm_info("##### YAMAUCHI remove check_async. op = %s", op->id);
         g_hash_table_remove(check_async_reply_list, async_reply_op->remote_op_id);
