@@ -61,6 +61,9 @@ typedef struct device_properties_s {
     int delay_max[st_phase_max];
     /* Action-specific base delay for each phase */
     int delay_base[st_phase_max];
+
+    uint32_t flags; // Group of enum st_device_flags
+
 } device_properties_t;
 
 typedef struct {
@@ -2014,7 +2017,9 @@ add_device_properties(xmlNode *xml, remote_fencing_op_t *op,
     }
 
     crm_element_value_int(xml, F_STONITH_DEVICE_SUPPORT_FLAGS, &flags);
-crm_info("#### YAMAUCHI #### device : %s flags : %d", device, flags); 
+    props->flags = flags;
+crm_info("#### YAMAUCHI #### device : %s flags : %d on-support : %s", device, props->flags, pcmk_is_set(props->flags, st_device_supports_on)? "TRUE" : "FALSE" ); 
+
 
     /* Parse action-specific device properties */
     parse_action_specific(xml, peer->host, device, op_requested_action(op),
