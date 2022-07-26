@@ -897,6 +897,8 @@ read_action_metadata(stonith_device_t *device)
             if (pcmk__xe_attr_is_true(match, "automatic") || pcmk__xe_attr_is_true(match, "required")) {
                 device->automatic_unfencing = TRUE;
             }
+            stonith__set_device_flags(device->flags, device->id,
+                                      st_device_supports_on);
         }
 
         if (action && pcmk__xe_attr_is_true(match, "on_target")) {

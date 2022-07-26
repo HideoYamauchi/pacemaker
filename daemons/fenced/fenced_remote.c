@@ -933,7 +933,7 @@ advance_topology_level(remote_fencing_op_t *op, bool empty_ok)
         op->level++;
 
     } while (op->level < ST_LEVEL_MAX && tp->levels[op->level] == NULL);
-
+crm_info("#### YAMAUCHI #### advance_topology_level() : level : %d", op->level);
     if (op->level < ST_LEVEL_MAX) {
         crm_trace("Attempting fencing level %d targeting %s (%d devices) "
                   "for client %s@%s (id=%.8s)",
@@ -1379,8 +1379,12 @@ stonith_choose_peer(remote_fencing_op_t * op)
             device = op->devices->data;
             crm_trace("Checking for someone to fence (%s) %s using %s",
                       op->action, op->target, device);
+            crm_info("#### YAMAUCHI #### Checking for someone to fence (%s) %s using %s",
+                      op->action, op->target, device);
         } else {
             crm_trace("Checking for someone to fence (%s) %s",
+                      op->action, op->target);
+            crm_info("#### YAMAUCHI #### Checking for someone to fence (%s) %s",
                       op->action, op->target);
         }
 
@@ -2018,9 +2022,11 @@ add_device_properties(xmlNode *xml, remote_fencing_op_t *op,
          * winds up getting remapped.
          */
         if (pcmk__str_eq(ID(child), "off", pcmk__str_casei)) {
+crm_info("#### YAMAUCHI #### parse_action_specific() : %s off", device);
             parse_action_specific(child, peer->host, device, "off",
                                   op, st_phase_off, props);
         } else if (pcmk__str_eq(ID(child), "on", pcmk__str_casei)) {
+crm_info("#### YAMAUCHI #### parse_action_specific() : %s on", device);
             parse_action_specific(child, peer->host, device, "on",
                                   op, st_phase_on, props);
         }
