@@ -1998,6 +1998,7 @@ add_device_properties(xmlNode *xml, remote_fencing_op_t *op,
 {
     xmlNode *child;
     int verified = 0;
+    int flags = 0;
     device_properties_t *props = calloc(1, sizeof(device_properties_t));
 
     /* Add a new entry to this peer's devices list */
@@ -2011,6 +2012,9 @@ add_device_properties(xmlNode *xml, remote_fencing_op_t *op,
                   peer->host, device);
         props->verified = TRUE;
     }
+
+    crm_element_value_int(xml, F_STONITH_DEVICE_SUPPORT_FLAGS, &flags);
+crm_info("#### YAMAUCHI #### device : %s flags : %d", device, flags); 
 
     /* Parse action-specific device properties */
     parse_action_specific(xml, peer->host, device, op_requested_action(op),

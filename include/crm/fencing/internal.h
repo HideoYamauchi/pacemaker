@@ -133,6 +133,7 @@ void stonith__device_parameter_flags(uint32_t *device_flags,
 #  define F_STONITH_NOTIFY_ACTIVATE   "st_notify_activate"
 #  define F_STONITH_NOTIFY_DEACTIVATE "st_notify_deactivate"
 #  define F_STONITH_DELEGATE      "st_delegate"
+#  define F_STONITH_DEVICE_SUPPORT_FLAGS   "st_support_flags"
 /*! The node initiating the stonith operation.  If an operation
  * is relayed, this is the last node the operation lands on. When
  * in standalone mode, origin is the client's id that originated the
