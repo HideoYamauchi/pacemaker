@@ -936,7 +936,7 @@ advance_topology_level(remote_fencing_op_t *op, bool empty_ok)
         op->level++;
 
     } while (op->level < ST_LEVEL_MAX && tp->levels[op->level] == NULL);
-crm_info("#### YAMAUCHI #### advance_topology_level() : level : %d", op->level);
+//crm_info("#### YAMAUCHI #### advance_topology_level() : level : %d", op->level);
     if (op->level < ST_LEVEL_MAX) {
         crm_trace("Attempting fencing level %d targeting %s (%d devices) "
                   "for client %s@%s (id=%.8s)",
@@ -1382,13 +1382,13 @@ stonith_choose_peer(remote_fencing_op_t * op)
             device = op->devices->data;
             crm_trace("Checking for someone to fence (%s) %s using %s",
                       op->action, op->target, device);
-            crm_info("#### YAMAUCHI #### Checking for someone to fence (%s) %s using %s",
-                      op->action, op->target, device);
+//            crm_info("#### YAMAUCHI #### Checking for someone to fence (%s) %s using %s",
+//                      op->action, op->target, device);
         } else {
             crm_trace("Checking for someone to fence (%s) %s",
                       op->action, op->target);
-            crm_info("#### YAMAUCHI #### Checking for someone to fence (%s) %s",
-                      op->action, op->target);
+//            crm_info("#### YAMAUCHI #### Checking for someone to fence (%s) %s",
+//                      op->action, op->target);
         }
 
         /* Best choice is a peer other than the target with verified access */
@@ -1715,10 +1715,31 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
          * @TODO Basing the total timeout on the caller's preferred peer (above)
          *       is less than ideal.
          */
+Next:
         peer = stonith_choose_peer(op);
 
         device = op->devices->data;
         timeout = get_device_timeout(op, peer, device);
+
+//YAMAUCHI
+        if (peer != NULL && pcmk__str_eq(op->action, "on", pcmk__str_casei)) {
+            device_properties_t *props = g_hash_table_lookup(peer->devices, device);
+            crm_info("#### YAMAUCHI #### peer : %s device: %s", peer->host, device);
+            if (props){
+                crm_info("#### YAMAUCHI #### peer : %s device : %s flags : %d on-support : %s", 
+                    peer->host, device, props->flags, pcmk_is_set(props->flags, st_device_supports_on)? "TRUE" : "FALSE" ); 
+                if (!pcmk_is_set(props->flags, st_device_supports_on)) { 
+                    if (advance_topology_level(op, false) != pcmk_rc_ok) {
+                        crm_info("#### YAMAUCHI #### NO more topology");
+                        return;
+                    } else {
+                        crm_info("#### YAMAUCHI #### Find more topology on ");
+                        goto Next;
+                    }
+                }
+            }
+
+        }
     }
 
     if (peer) {
@@ -2018,7 +2039,7 @@ add_device_properties(xmlNode *xml, remote_fencing_op_t *op,
 
     crm_element_value_int(xml, F_STONITH_DEVICE_SUPPORT_FLAGS, &flags);
     props->flags = flags;
-crm_info("#### YAMAUCHI #### device : %s flags : %d on-support : %s", device, props->flags, pcmk_is_set(props->flags, st_device_supports_on)? "TRUE" : "FALSE" ); 
+//crm_info("#### YAMAUCHI #### device : %s flags : %d on-support : %s", device, props->flags, pcmk_is_set(props->flags, st_device_supports_on)? "TRUE" : "FALSE" ); 
 
 
     /* Parse action-specific device properties */
@@ -2031,11 +2052,11 @@ crm_info("#### YAMAUCHI #### device : %s flags : %d on-support : %s", device, pr
          * winds up getting remapped.
          */
         if (pcmk__str_eq(ID(child), "off", pcmk__str_casei)) {
-crm_info("#### YAMAUCHI #### parse_action_specific() : %s off", device);
+//crm_info("#### YAMAUCHI #### parse_action_specific() : %s off", device);
             parse_action_specific(child, peer->host, device, "off",
                                   op, st_phase_off, props);
         } else if (pcmk__str_eq(ID(child), "on", pcmk__str_casei)) {
-crm_info("#### YAMAUCHI #### parse_action_specific() : %s on", device);
+//crm_info("#### YAMAUCHI #### parse_action_specific() : %s on", device);
             parse_action_specific(child, peer->host, device, "on",
                                   op, st_phase_on, props);
         }
