@@ -2507,6 +2507,17 @@ send_async_reply(async_command_t *cmd, const pcmk__action_result_t *result,
                   cmd->action, cmd->victim);
         crm_xml_add(reply, F_SUBTYPE, "broadcast");
         crm_xml_add(reply, F_STONITH_OPERATION, T_STONITH_NOTIFY);
+
+        if (result->exit_status != CRM_EX_OK) {
+            struct timespec tv;
+
+            /* Get the failed time. */
+            qb_util_timespec_from_epoch_get(&tv);
+            crm_xml_add_int(reply, F_STONITH_TIMEOUT, cmd->timeout);
+            crm_xml_add_ll(reply, F_STONITH_DATE, tv.tv_sec);
+            crm_xml_add_ll(reply, F_STONITH_DATE_NSEC, tv.tv_nsec);
+
+        }
         send_cluster_message(NULL, crm_msg_stonith_ng, reply, FALSE);
     } else {
         // Reply only to the originator

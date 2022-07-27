@@ -208,6 +208,7 @@ void free_device_list(void);
 void init_topology_list(void);
 void free_topology_list(void);
 void free_stonith_remote_op_list(void);
+void free_check_async_reply_list(void);
 void init_stonith_remote_op_hash_table(GHashTable **table);
 void free_metadata_cache(void);
 void fenced_unregister_handlers(void);
@@ -288,3 +289,4 @@ extern long stonith_watchdog_timeout_ms;
 extern GList *stonith_watchdog_targets;
 
 extern GHashTable *stonith_remote_op_list;
+extern GHashTable *check_async_reply_list;
