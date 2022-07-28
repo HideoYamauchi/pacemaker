@@ -897,6 +897,8 @@ read_action_metadata(stonith_device_t *device)
             if (pcmk__xe_attr_is_true(match, "automatic") || pcmk__xe_attr_is_true(match, "required")) {
                 device->automatic_unfencing = TRUE;
             }
+            stonith__set_device_flags(device->flags, device->id,
+                                      st_device_supports_on);
         }
 
         if (action && pcmk__xe_attr_is_true(match, "on_target")) {
@@ -2311,6 +2313,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
         crm_xml_add(dev, "namespace", device->namespace);
         crm_xml_add(dev, "agent", device->agent);
         crm_xml_add_int(dev, F_STONITH_DEVICE_VERIFIED, device->verified);
+        crm_xml_add_int(dev, F_STONITH_DEVICE_SUPPORT_FLAGS, device->flags);
 
         /* If the originating fencer wants to reboot the node, and we have a
          * capable device that doesn't support "reboot", remap to "off" instead.
@@ -2342,6 +2345,16 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
                              pcmk_is_set(query->call_options, st_opt_allow_suicide));
             add_action_reply(dev, "on", device, query->target, FALSE);
         }
+//YAMAUCHI
+#if 0
+        if (pcmk__str_eq(query->action, "on", pcmk__str_casei)) {
+            if (pcmk_is_set(device->flags, st_device_supports_on)) {
+                add_disallowed(dev, action, device, query->target,
+                           pcmk_is_set(query->call_options, st_opt_allow_suicide));
+                add_action_reply(dev, "on", device, query->target, FALSE);
+            }
+        }
+#endif
 
         /* A query without a target wants device parameters */
         if (query->target == NULL) {

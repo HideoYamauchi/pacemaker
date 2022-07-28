@@ -61,6 +61,9 @@ typedef struct device_properties_s {
     int delay_max[st_phase_max];
     /* Action-specific base delay for each phase */
     int delay_base[st_phase_max];
+
+    uint32_t flags; // Group of enum st_device_flags
+
 } device_properties_t;
 
 typedef struct {
@@ -1708,10 +1711,34 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
          * @TODO Basing the total timeout on the caller's preferred peer (above)
          *       is less than ideal.
          */
-        peer = stonith_choose_peer(op);
+        do {
+            peer = stonith_choose_peer(op);
 
-        device = op->devices->data;
-        timeout = get_device_timeout(op, peer, device);
+            device = op->devices->data;
+            timeout = get_device_timeout(op, peer, device);
+
+//YAMAUCHI
+            if (peer != NULL && pcmk__str_eq(op->action, "on", pcmk__str_casei)) {
+                device_properties_t *props = g_hash_table_lookup(peer->devices, device);
+                crm_info("#### YAMAUCHI #### peer : %s device: %s", peer->host, device);
+                if (props){
+                    crm_info("#### YAMAUCHI #### peer : %s device : %s flags : %d on-support : %s", 
+                        peer->host, device, props->flags, pcmk_is_set(props->flags, st_device_supports_on)? "TRUE" : "FALSE" ); 
+                    if (!pcmk_is_set(props->flags, st_device_supports_on)) { 
+                        if (advance_topology_level(op, false) != pcmk_rc_ok) {
+                            crm_info("#### YAMAUCHI #### NO more topology");
+                            return;
+                        } else {
+                            crm_info("#### YAMAUCHI #### Find more topology on ");
+                            continue;
+                        }
+                    }
+                    break;
+                }
+            } else {
+                break;
+            }
+        } while(1);
     }
 
     if (peer) {
@@ -1994,6 +2021,7 @@ add_device_properties(xmlNode *xml, remote_fencing_op_t *op,
 {
     xmlNode *child;
     int verified = 0;
+    int flags = 0;
     device_properties_t *props = calloc(1, sizeof(device_properties_t));
 
     /* Add a new entry to this peer's devices list */
@@ -2007,6 +2035,9 @@ add_device_properties(xmlNode *xml, remote_fencing_op_t *op,
                   peer->host, device);
         props->verified = TRUE;
     }
+
+    crm_element_value_int(xml, F_STONITH_DEVICE_SUPPORT_FLAGS, &flags);
+    props->flags = flags;
 
     /* Parse action-specific device properties */
     parse_action_specific(xml, peer->host, device, op_requested_action(op),
