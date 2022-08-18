@@ -1350,7 +1350,6 @@ find_best_peer(const char *device, remote_fencing_op_t * op, enum find_best_peer
         if ((options & FIND_PEER_TARGET_ONLY) && !pcmk__str_eq(peer->host, op->target, pcmk__str_casei)) {
             continue;
         }
-
         if (pcmk_is_set(op->call_options, st_opt_topology)) {
 
             if (grab_peer_device(op, peer, device, verified_devices_only)) {
@@ -1368,6 +1367,28 @@ find_best_peer(const char *device, remote_fencing_op_t * op, enum find_best_peer
 
     return NULL;
 }
+#if 1
+//YAMAUCHI
+static gboolean
+is_device_support_on_action(const char *device, remote_fencing_op_t * op, peer_device_info_t *peer)
+{
+    if (peer != NULL && pcmk__str_eq(op->action, "on", pcmk__str_casei)) {
+        device_properties_t *props = g_hash_table_lookup(peer->devices, device);
+
+        crm_info("#### YAMAUCHI #### peer : %s device : %s flags : %d on-support : %s",
+            peer->host, device, props->flags, pcmk_is_set(props->flags, st_device_supports_on)? "TRUE" : "FALSE" );
+
+        if (props) {
+            if (!pcmk_is_set(props->flags, st_device_supports_on)) {
+                crm_info("#### YAMAUCHI #### NO on action Support");
+                return FALSE;
+            }
+        }
+    }
+
+    return TRUE;
+}
+#endif
 
 static peer_device_info_t *
 stonith_choose_peer(remote_fencing_op_t * op)
@@ -1388,7 +1409,7 @@ stonith_choose_peer(remote_fencing_op_t * op)
 
         /* Best choice is a peer other than the target with verified access */
         peer = find_best_peer(device, op, FIND_PEER_SKIP_TARGET|FIND_PEER_VERIFIED_ONLY);
-        if (peer) {
+        if (peer && is_device_support_on_action(device, op, peer)) {
             crm_trace("Found verified peer %s for %s", peer->host, device?device:"<any>");
             return peer;
         }
@@ -1400,7 +1421,7 @@ stonith_choose_peer(remote_fencing_op_t * op)
 
         /* If no other peer has verified access, next best is unverified access */
         peer = find_best_peer(device, op, FIND_PEER_SKIP_TARGET);
-        if (peer) {
+        if (peer && is_device_support_on_action(device, op, peer)) {
             crm_trace("Found best unverified peer %s", peer->host);
             return peer;
         }
@@ -1410,7 +1431,7 @@ stonith_choose_peer(remote_fencing_op_t * op)
          */
         if (op->phase != st_phase_on) {
             peer = find_best_peer(device, op, FIND_PEER_TARGET_ONLY);
-            if (peer) {
+            if (peer && is_device_support_on_action(device, op, peer)) {
                 crm_trace("%s will fence itself", peer->host);
                 return peer;
             }
@@ -1710,6 +1731,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
          * @TODO Basing the total timeout on the caller's preferred peer (above)
          *       is less than ideal.
          */
+
         peer = stonith_choose_peer(op);
 
         device = op->devices->data;
