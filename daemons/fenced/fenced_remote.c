@@ -118,7 +118,7 @@ free_stonith_remote_op_list(void)
 struct peer_count_data {
     const remote_fencing_op_t *op;
     gboolean verified_only;
-    gboolean support_action_only;
+    gboolean support_on_action_only;
     int count;
 };
 
@@ -138,7 +138,7 @@ count_peer_device(gpointer key, gpointer value, gpointer user_data)
 
     if (!props->executed[data->op->phase]
         && (!data->verified_only || props->verified)
-        && (!data->support_action_only || pcmk_is_set(props->device_support_flags, st_device_supports_on))) {
+        && (!data->support_on_action_only || pcmk_is_set(props->device_support_flags, st_device_supports_on))) {
         ++(data->count);
     }
 }
@@ -150,19 +150,19 @@ count_peer_device(gpointer key, gpointer value, gpointer user_data)
  * \param[in] op             Operation that results are for
  * \param[in] peer           Peer to count
  * \param[in] verified_only  Whether to count only verified devices
- * \param[in] support_action_only Whether to count only devices that support action
+ * \param[in] support_on_action_only Whether to count only devices that support action
  *
  * \return Number of devices available to peer that were not already executed
  */
 static int
 count_peer_devices(const remote_fencing_op_t *op,
-                   const peer_device_info_t *peer, gboolean verified_only, gboolean support_action_only)
+                   const peer_device_info_t *peer, gboolean verified_only, gboolean support_on_action_only)
 {
     struct peer_count_data data;
 
     data.op = op;
     data.verified_only = verified_only;
-    data.support_action_only = support_action_only;
+    data.support_on_action_only = support_on_action_only;
     data.count = 0;
     if (peer) {
         g_hash_table_foreach(peer->devices, count_peer_device, &data);
