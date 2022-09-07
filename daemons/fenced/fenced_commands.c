@@ -1992,8 +1992,13 @@ static void
 search_devices_record_result(struct device_search_s *search, const char *device, gboolean can_fence)
 {
     search->replies_received++;
-
     if (can_fence && device) {
+        if (pcmk__str_eq(search->action, "on", pcmk__str_casei)) {
+            stonith_device_t *dev = g_hash_table_lookup(device_list, device);
+            if (dev && !pcmk_is_set(dev->flags, st_device_supports_on)) {
+                return;
+            }
+        }
         search->capable = g_list_append(search->capable, strdup(device));
     }
 
