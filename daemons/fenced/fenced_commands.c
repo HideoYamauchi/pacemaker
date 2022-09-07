@@ -935,6 +935,8 @@ read_action_metadata(stonith_device_t *device)
             if (pcmk__xe_attr_is_true(match, "automatic") || pcmk__xe_attr_is_true(match, "required")) {
                 device->automatic_unfencing = TRUE;
             }
+            stonith__set_device_flags(device->flags, device->id,
+                                      st_device_supports_on);
         }
 
         if (action && pcmk__xe_attr_is_true(match, "on_target")) {
@@ -1987,8 +1989,13 @@ static void
 search_devices_record_result(struct device_search_s *search, const char *device, gboolean can_fence)
 {
     search->replies_received++;
-
     if (can_fence && device) {
+        if (pcmk__str_eq(search->action, "on", pcmk__str_casei)) {
+            stonith_device_t *dev = g_hash_table_lookup(device_list, device);
+            if (dev && !pcmk_is_set(dev->flags, st_device_supports_on)) {
+                return;
+            }
+        }
         search->capable = g_list_append(search->capable, strdup(device));
     }
 
@@ -2350,6 +2357,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
         crm_xml_add(dev, "namespace", device->namespace);
         crm_xml_add(dev, "agent", device->agent);
         crm_xml_add_int(dev, F_STONITH_DEVICE_VERIFIED, device->verified);
+        crm_xml_add_int(dev, F_STONITH_DEVICE_SUPPORT_FLAGS, device->flags);
 
         /* If the originating fencer wants to reboot the node, and we have a
          * capable device that doesn't support "reboot", remap to "off" instead.
