@@ -138,7 +138,7 @@ count_peer_device(gpointer key, gpointer value, gpointer user_data)
 
     if (!props->executed[data->op->phase]
         && (!data->verified_only || props->verified)
-        && (!data->support_action_only || pcmk_is_set(props->device_support_flags, data->support_action_only))) {
+        && ((data->support_action_only == st_device_supports_none) || pcmk_is_set(props->device_support_flags, data->support_action_only))) {
         ++(data->count);
     }
 }

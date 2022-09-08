@@ -1992,7 +1992,7 @@ search_devices_record_result(struct device_search_s *search, const char *device,
 {
     search->replies_received++;
     if (can_fence && device) {
-        if (search->support_action_only) {
+        if (search->support_action_only != st_device_supports_none) {
             stonith_device_t *dev = g_hash_table_lookup(device_list, device);
             if (dev && !pcmk_is_set(dev->flags, search->support_action_only)) {
                 return;
