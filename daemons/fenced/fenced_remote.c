@@ -2158,7 +2158,7 @@ process_remote_stonith_query(xmlNode * msg)
         }
 
     } else if (op->state == st_query) {
-        int nverified = count_peer_devices(op, peer, TRUE, pcmk__str_eq(op->action, "on", pcmk__str_casei));
+        int nverified = count_peer_devices(op, peer, TRUE, pcmk__str_eq(op->action, "on", pcmk__str_casei)? st_device_supports_on : st_device_supports_none);
 
         /* We have a result for a non-topology fencing op that looks promising,
          * go ahead and start fencing before query timeout */
