@@ -625,7 +625,7 @@ void pe__foreach_param_check(pe_working_set_t *data_set,
                                         enum pcmk__check_parameters));
 void pe__free_param_checks(pe_working_set_t *data_set);
 
-bool pe__shutdown_requested(const pe_node_t *node);
+bool pe__shutdown_requested(const pe_node_t *node, const xmlNode *node_state);
 void pe__update_recheck_time(time_t recheck, pe_working_set_t *data_set);
 
 /*!
