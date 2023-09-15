@@ -298,7 +298,7 @@ do_cl_join_finalize_respond(long long action,
     update_attrd(controld_globals.our_nodename, CRM_ATTR_FEATURE_SET,
                  CRM_FEATURE_SET, NULL, FALSE);
 //YAMAUCHI
-    update_attrd(controld_globals.our_nodename, "#controld_startup",
+    update_attrd(controld_globals.our_nodename, XML_CIB_ATTR_CONTROLD_STARTUP_TIME,
                  controld_globals.startup_time, NULL, FALSE);
 
     /* send our status section to the DC */

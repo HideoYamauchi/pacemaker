@@ -97,7 +97,7 @@ typedef struct {
     GMainLoop *mainloop;
 
     //! YAMAUCHI 
-    char *startup_time;
+    char *controld_startup_time;
 } controld_globals_t;
 
 extern controld_globals_t controld_globals;
