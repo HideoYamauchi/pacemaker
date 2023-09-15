@@ -1231,6 +1231,8 @@ handle_shutdown_request(xmlNode * stored_msg)
 
     char *now_s = NULL;
     const char *host_from = crm_element_value(stored_msg, F_CRM_HOST_FROM);
+    //YAMAUCHI
+    const char *startup_time = crm_element_value(stored_msg, "startup_time");
 
     if (host_from == NULL) {
         /* we're shutting down and the DC */
@@ -1243,6 +1245,9 @@ handle_shutdown_request(xmlNode * stored_msg)
 
     now_s = pcmk__ttoa(time(NULL));
     update_attrd(host_from, XML_CIB_ATTR_SHUTDOWN, now_s, NULL, FALSE);
+
+    //YAMAUCHI
+    update_attrd(host_from, "controld_startup", startup_time, NULL, FALSE);
     free(now_s);
 
     /* will be picked up by the TE as long as its running */

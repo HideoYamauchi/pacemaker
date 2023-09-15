@@ -297,6 +297,9 @@ do_cl_join_finalize_respond(long long action,
     /* record the node's feature set as a transient attribute */
     update_attrd(controld_globals.our_nodename, CRM_ATTR_FEATURE_SET,
                  CRM_FEATURE_SET, NULL, FALSE);
+//YAMAUCHI
+    update_attrd(controld_globals.our_nodename, "controld_startup",
+                 controld_globals.startup_time, NULL, FALSE);
 
     /* send our status section to the DC */
     tmp1 = controld_query_executor_state();

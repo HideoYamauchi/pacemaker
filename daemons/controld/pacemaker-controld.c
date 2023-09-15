@@ -182,6 +182,8 @@ crmd_init(void)
     state = s_crmd_fsa(C_STARTUP);
 
     if (state == S_PENDING || state == S_STARTING) {
+        //YAMAUCHI
+        controld_globals.startup_time = pcmk__ttoa(time(NULL));
         /* Create the mainloop and run it... */
         crm_trace("Starting %s's mainloop", crm_system_name);
         controld_globals.mainloop = g_main_loop_new(NULL, FALSE);
