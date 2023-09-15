@@ -1232,7 +1232,7 @@ handle_shutdown_request(xmlNode * stored_msg)
     char *now_s = NULL;
     const char *host_from = crm_element_value(stored_msg, F_CRM_HOST_FROM);
     //YAMAUCHI
-    const char *startup_time = crm_element_value(stored_msg, "startup_time");
+    const char *startup_time = crm_element_value(stored_msg, F_CRM_CONTROLD_STARTUP);
 
     if (host_from == NULL) {
         /* we're shutting down and the DC */
