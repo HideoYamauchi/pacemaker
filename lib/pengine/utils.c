@@ -661,7 +661,7 @@ bool
 pe__shutdown_requested(const pe_node_t *node, const xmlNode *node_state)
 {
     const char *shutdown = pe_node_attribute_raw(node, XML_CIB_ATTR_SHUTDOWN);
-    const char *startup = pe_node_attribute_raw(node, "controld_startup");
+    const char *startup = pe_node_attribute_raw(node, "#controld_startup");
     const char *in_cluster = crm_element_value(node_state, XML_NODE_IN_CLUSTER);
     long long when_member = 0;
     long long when_shutdown = 0;

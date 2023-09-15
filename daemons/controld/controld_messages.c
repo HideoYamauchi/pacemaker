@@ -1247,7 +1247,8 @@ handle_shutdown_request(xmlNode * stored_msg)
     update_attrd(host_from, XML_CIB_ATTR_SHUTDOWN, now_s, NULL, FALSE);
 
     //YAMAUCHI
-    update_attrd(host_from, "controld_startup", startup_time, NULL, FALSE);
+crm_info("#### YAMAUCHI ### handle_shutdown_request : from %s : controld_startup : %s", host_from, startup_time);
+    update_attrd(host_from, "#controld_startup", startup_time, NULL, FALSE);
     free(now_s);
 
     /* will be picked up by the TE as long as its running */
