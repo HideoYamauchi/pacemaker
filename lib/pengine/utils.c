@@ -662,10 +662,13 @@ pe__shutdown_requested(const pe_node_t *node, const xmlNode *node_state)
 {
     const char *shutdown = pe_node_attribute_raw(node, XML_CIB_ATTR_SHUTDOWN);
     const char *startup = pe_node_attribute_raw(node, XML_CIB_ATTR_CLUSTER_STARTUP_TIME);
+#if 0
     const char *in_cluster = crm_element_value(node_state, XML_NODE_IN_CLUSTER);
     long long when_member = 0;
+#endif
     long long when_shutdown = 0;
     long long when_startup = 0;
+#if 0
     int member = false;
 
     // @COMPAT DCs < 2.1.7 use boolean instead of time for cluster membership
@@ -686,6 +689,19 @@ crm_info("### YAMAUCHI #### %s is %s", node->details->uname, when_shutdown > whe
     }
 
     return !pcmk__str_eq(shutdown, "0", pcmk__str_null_matches);
+#endif
+    pcmk__scan_ll(shutdown, &when_shutdown, 0LL);
+    pcmk__scan_ll(startup, &when_startup, 0LL);
+crm_info("### YAMAUCHI #### %s was when_shutdown : %ld", node->details->uname, when_shutdown); 
+crm_info("### YAMAUCHI #### %s was when_startup : %ld", node->details->uname, when_startup); 
+
+    if (when_startup == 0) {
+        /* For older versions where when_startup does not exist. */
+        return !pcmk__str_eq(shutdown, "0", pcmk__str_null_matches);
+    } else {
+crm_info("### YAMAUCHI #### %s is %s", node->details->uname, when_shutdown > when_startup ? "shutdown" : "ignore shutdown"); 
+        return (when_shutdown > when_startup);
+    }
 }
 
 /*!
