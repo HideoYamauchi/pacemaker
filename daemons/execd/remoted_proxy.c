@@ -299,6 +299,9 @@ ipc_proxy_shutdown_req(pcmk__client_t *ipc_proxy)
      */
     crm_xml_add(msg, F_LRMD_IPC_SESSION, "0");
 
+//YAMAUCHI
+    crm_xml_add(msg, F_CRM_CLUSTER_STARTUP, pcmk__ttoa(start_time));
+
     rc = (lrmd_server_send_notify(ipc_proxy, msg) != pcmk_rc_ok)? -1 : 0;
     free_xml(msg);
     return rc;

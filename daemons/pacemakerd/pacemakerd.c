@@ -276,6 +276,8 @@ main(int argc, char **argv)
     qb_ipcs_service_t *ipcs = NULL;
 
     subdaemon_check_progress = time(NULL);
+//YAMAUCHI
+    setenv("PCMK_cluster_startup_time", pcmk__ttoa(time(NULL)), 1);
 
     setenv("LC_ALL", "C", 1); // Ensure logs are in a common language
 

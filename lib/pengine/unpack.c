@@ -1025,7 +1025,7 @@ unpack_handle_remote_attrs(pe_node_t *this_node, const xmlNode *state,
     attrs = find_xml_node(state, XML_TAG_TRANSIENT_NODEATTRS, FALSE);
     add_node_attrs(attrs, this_node, TRUE, data_set);
 
-    if (pe__shutdown_requested(this_node)) {
+    if (pe__shutdown_requested(this_node, state)) {
         crm_info("%s is shutting down", pe__node_name(this_node));
         this_node->details->shutdown = TRUE;
     }
@@ -1661,7 +1661,7 @@ determine_online_status(const xmlNode *node_state, pe_node_t *this_node,
     this_node->details->shutdown = FALSE;
     this_node->details->expected_up = FALSE;
 
-    if (pe__shutdown_requested(this_node)) {
+    if (pe__shutdown_requested(this_node, node_state)) {
         this_node->details->shutdown = TRUE;
 
     } else if (pcmk__str_eq(exp_state, CRMD_JOINSTATE_MEMBER, pcmk__str_casei)) {
