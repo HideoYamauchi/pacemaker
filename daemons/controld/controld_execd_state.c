@@ -524,8 +524,15 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
                    lrm_state->node_name);
 
         if (!remote_ra_is_in_maintenance(lrm_state)) {
+//YAMAUCHI
+            const char *startup_time = crm_element_value(msg, F_CRM_CLUSTER_STARTUP);  
+
             now_s = pcmk__ttoa(time(NULL));
+
             update_attrd(lrm_state->node_name, XML_CIB_ATTR_SHUTDOWN, now_s, NULL, TRUE);
+//YAMAUCHI
+            update_attrd(lrm_state->node_name, XML_CIB_ATTR_CLUSTER_STARTUP_TIME, startup_time, NULL, TRUE);
+
             free(now_s);
 
             remote_proxy_ack_shutdown(lrmd);
