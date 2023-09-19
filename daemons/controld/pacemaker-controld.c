@@ -175,6 +175,9 @@ crmd_init(void)
     crm_exit_t exit_code = CRM_EX_OK;
     enum crmd_fsa_state state;
 
+//YAMAUCHI
+    controld_globals.controld_startup_time = getenv("PCMK_cluster_startup_time");
+
     init_dotfile();
     register_fsa_input(C_STARTUP, I_STARTUP, NULL);
 
@@ -183,7 +186,11 @@ crmd_init(void)
 
     if (state == S_PENDING || state == S_STARTING) {
         //YAMAUCHI
-        controld_globals.controld_startup_time = pcmk__ttoa(time(NULL));
+        crm_info("#### YAMAUCHI prev controld_globals.controld_startup_time : %s", controld_globals.controld_startup_time);
+        if (controld_globals.controld_startup_time == NULL) {
+            controld_globals.controld_startup_time = pcmk__ttoa(time(NULL));
+        }
+        crm_info("#### YAMAUCHI aft controld_globals.controld_startup_time : %s", controld_globals.controld_startup_time);
         /* Create the mainloop and run it... */
         crm_trace("Starting %s's mainloop", crm_system_name);
         controld_globals.mainloop = g_main_loop_new(NULL, FALSE);
