@@ -1232,7 +1232,7 @@ handle_shutdown_request(xmlNode * stored_msg)
     char *now_s = NULL;
     const char *host_from = crm_element_value(stored_msg, F_CRM_HOST_FROM);
     //YAMAUCHI
-    const char *startup_time = crm_element_value(stored_msg, F_CRM_CONTROLD_STARTUP);
+    const char *startup_time = crm_element_value(stored_msg, F_CRM_CLUSTER_STARTUP);
 
     if (host_from == NULL) {
         /* we're shutting down and the DC */
@@ -1247,8 +1247,8 @@ handle_shutdown_request(xmlNode * stored_msg)
     update_attrd(host_from, XML_CIB_ATTR_SHUTDOWN, now_s, NULL, FALSE);
 
     //YAMAUCHI
-crm_info("#### YAMAUCHI ### handle_shutdown_request : from %s : controld_startup : %s", host_from, startup_time);
-    update_attrd(host_from, XML_CIB_ATTR_CONTROLD_STARTUP_TIME, startup_time, NULL, FALSE);
+crm_info("#### YAMAUCHI ### handle_shutdown_request : from %s : cluster_startup : %s", host_from, startup_time);
+    update_attrd(host_from, XML_CIB_ATTR_CLUSTER_STARTUP_TIME, startup_time, NULL, FALSE);
     free(now_s);
 
     /* will be picked up by the TE as long as its running */

@@ -117,7 +117,7 @@ do_shutdown_req(long long action,
              pcmk__s(controld_globals.dc_name, "not set"));
     msg = create_request(CRM_OP_SHUTDOWN_REQ, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
     //YAMAUCHI
-    crm_xml_add(msg, F_CRM_CONTROLD_STARTUP, controld_globals.controld_startup_time);
+    crm_xml_add(msg, F_CRM_CLUSTER_STARTUP, controld_globals.cluster_startup_time);
     if (send_cluster_message(NULL, crm_msg_crmd, msg, TRUE) == FALSE) {
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
     }
