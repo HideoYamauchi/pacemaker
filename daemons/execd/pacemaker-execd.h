@@ -99,8 +99,6 @@ void ipc_proxy_add_provider(pcmk__client_t *client);
 void ipc_proxy_remove_provider(pcmk__client_t *client);
 void ipc_proxy_forward_client(pcmk__client_t *client, xmlNode *xml);
 pcmk__client_t *ipc_proxy_get_provider(void);
-//YAMAUCHI
-//int ipc_proxy_send_cluster_startup(pcmk__client_t *ipc_proxy);
 int ipc_proxy_shutdown_req(pcmk__client_t *ipc_proxy);
 void remoted_spawn_pidone(int argc, char **argv, char **envp);
 #endif

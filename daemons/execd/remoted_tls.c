@@ -96,8 +96,6 @@ lrmd_remote_client_msg(gpointer data)
                      pcmk__client_tls_handshake_complete)) {
         return remoted__read_handshake_data(client);
     }
-//YAMAUCHI
-//    ipc_proxy_send_cluster_startup(client);
 
     switch (pcmk__remote_ready(client->remote, 0)) {
         case pcmk_rc_ok:

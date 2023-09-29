@@ -277,29 +277,6 @@ ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 
     return 0;
 }
-#if 0
-//YAMAUCHI
-int
-ipc_proxy_send_cluster_startup(pcmk__client_t *ipc_proxy)
-{
-        xmlNode *msg = create_xml_node(NULL, T_LRMD_IPC_PROXY);
-        int rc;
-
-        crm_xml_add(msg, F_LRMD_IPC_OP, LRMD_IPC_OP_CLUSTER_STARTUP);
-        crm_xml_add(msg, F_CRM_CLUSTER_STARTUP, pcmk__ttoa(start_time));
-crm_info("#### YAMAUCHI send LRMD_IPC_OP_CLUSTER_STARTUP");
-
-        /* We don't really have a session, but the controller needs this attribute
-         * to recognize this as proxy communication.
-         */
-
-        crm_xml_add(msg, F_LRMD_IPC_SESSION, "0");
-
-        rc = (lrmd_server_send_notify(ipc_proxy, msg) != pcmk_rc_ok)? -1 : 0;
-        free_xml(msg);
-        return rc;
-}
-#endif
 
 /*!
  * \internal
@@ -321,9 +298,6 @@ ipc_proxy_shutdown_req(pcmk__client_t *ipc_proxy)
      * to recognize this as proxy communication.
      */
     crm_xml_add(msg, F_LRMD_IPC_SESSION, "0");
-
-//YAMAUCHI
-    crm_xml_add(msg, F_CRM_CLUSTER_STARTUP, pcmk__ttoa(start_time));
 
     rc = (lrmd_server_send_notify(ipc_proxy, msg) != pcmk_rc_ok)? -1 : 0;
     free_xml(msg);
