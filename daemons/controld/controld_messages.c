@@ -1243,6 +1243,7 @@ handle_shutdown_request(xmlNode * stored_msg)
 
     now_s = pcmk__ttoa(time(NULL));
     update_attrd(host_from, XML_CIB_ATTR_SHUTDOWN, now_s, NULL, FALSE);
+
     free(now_s);
 
     /* will be picked up by the TE as long as its running */

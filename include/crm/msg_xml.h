@@ -131,6 +131,7 @@ extern "C" {
 
 #  define F_CRM_THROTTLE_MODE		"crm-limit-mode"
 #  define F_CRM_THROTTLE_MAX		"crm-limit-max"
+#  define F_CRM_CLUSTER_STARTUP		"cluster_startup"
 
 /*---- Common tags/attrs */
 #  define XML_DIFF_MARKER		"__crm_diff_marker__"
@@ -299,6 +300,8 @@ extern "C" {
 #  define XML_NODE_IS_MAINTENANCE   "node_in_maintenance"
 
 #  define XML_CIB_ATTR_SHUTDOWN       	"shutdown"
+//YAMAUCHI
+#  define XML_CIB_ATTR_CLUSTER_STARTUP_TIME       	"#cluster_startup_time"
 
 /* Aside from being an old name for the executor, LRM is a misnomer here because
  * the controller and scheduler use these to track actions, which are not always

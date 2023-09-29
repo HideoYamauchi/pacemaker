@@ -122,7 +122,7 @@ get_remote_node_state(const pe_node_t *node)
         if ((remote_rsc->next_role == pcmk_role_stopped)
             && remote_rsc->remote_reconnect_ms
             && node->details->remote_was_fenced
-            && !pe__shutdown_requested(node)) {
+            && !pe__shutdown_requested(node, NULL)) {
 
             /* We won't know whether the connection is recoverable until the
              * reconnect interval expires and we reattempt connection.

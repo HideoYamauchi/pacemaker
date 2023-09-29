@@ -602,8 +602,12 @@ lrmd_tls_connection_destroy(gpointer userdata)
 
     free(native->remote->buffer);
     free(native->remote->start_state);
+//YAMAUCHI
+    free(native->remote->startup);
     native->remote->buffer = NULL;
     native->remote->start_state = NULL;
+//YAMAUCHI
+    native->remote->startup = NULL;
     native->source = 0;
     native->sock = 0;
     native->psk_cred_c = NULL;
@@ -996,6 +1000,8 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
         const char *msg_type = crm_element_value(reply, F_LRMD_OPERATION);
         const char *tmp_ticket = crm_element_value(reply, F_LRMD_CLIENTID);
         const char *start_state = crm_element_value(reply, PCMK__XA_NODE_START_STATE);
+//YAMAUCHI
+        const char *startup = crm_element_value(reply, F_CRM_CLUSTER_STARTUP);
         long long uptime = -1;
 
         crm_element_value_int(reply, F_LRMD_RC, &rc);
@@ -1010,6 +1016,11 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
 
         if (start_state) {
             native->remote->start_state = strdup(start_state);
+        }
+//YAMAUCHI
+        crm_info("### YAMAUCHI #### native->remote->startup : %s", startup);
+        if (startup) {
+            native->remote->startup = strdup(startup);
         }
 
         if (rc == -EPROTO) {
@@ -2568,3 +2579,16 @@ lrmd__node_start_state(lrmd_t *lrmd)
         return native->remote->start_state;
     }
 }
+//YAMAUCHI
+const char *
+lrmd__node_startup(lrmd_t *lrmd)
+{
+    lrmd_private_t *native = lrmd->lrmd_private;
+
+    if (native->remote == NULL) {
+        return NULL;
+    } else {
+        return native->remote->startup;
+    }
+}
+

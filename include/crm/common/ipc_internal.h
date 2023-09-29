@@ -125,6 +125,8 @@ struct pcmk__remote_s {
 #  ifdef HAVE_GNUTLS_GNUTLS_H
     gnutls_session_t *tls_session;
 #  endif
+//YAMAUCHI
+    char *startup;
 };
 
 enum pcmk__client_flags {

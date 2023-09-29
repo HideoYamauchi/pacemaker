@@ -1509,6 +1509,8 @@ process_lrmd_signon(pcmk__client_t *client, xmlNode *request, int call_id,
     crm_xml_add(*reply, F_LRMD_CLIENTID, client->id);
     crm_xml_add(*reply, F_LRMD_PROTOCOL_VERSION, LRMD_PROTOCOL_VERSION);
     crm_xml_add_ll(*reply, PCMK__XA_UPTIME, now - start_time);
+//YAMAUCHI
+    crm_xml_add(*reply, F_CRM_CLUSTER_STARTUP, pcmk__ttoa(start_time));
 
     if (start_state) {
         crm_xml_add(*reply, PCMK__XA_NODE_START_STATE, start_state);

@@ -310,9 +310,16 @@ remote_node_up(const char *node_name)
     if (connection_rsc != NULL) {
         lrmd_t *lrm = connection_rsc->conn;
         const char *start_state = lrmd__node_start_state(lrm);
+//YAMAUCHI
+        const char *startup = lrmd__node_startup(lrm);
 
         if (start_state) {
             set_join_state(start_state, node->uname, node->uuid, true);
+        }
+//YAMAUCHI
+crm_info("### YAMAUCHI #### remote_node_up() startup : %s", startup);
+        if (startup) {
+            update_attrd(node_name, XML_CIB_ATTR_CLUSTER_STARTUP_TIME, startup, NULL, TRUE);
         }
     }
 
