@@ -299,7 +299,7 @@ extern "C" {
 
 #  define XML_CIB_ATTR_SHUTDOWN       	"shutdown"
 //YAMAUCHI
-#  define XML_CIB_ATTR_CLUSTER_STARTUP_TIME       	"cluster_startup_time"
+#  define XML_CIB_ATTR_CLUSTER_STARTUP_TIME       	"#cluster_startup_time"
 
 /* Aside from being an old name for the executor, LRM is a misnomer here because
  * the controller and scheduler use these to track actions, which are not always
