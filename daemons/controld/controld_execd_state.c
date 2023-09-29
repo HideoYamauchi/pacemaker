@@ -547,6 +547,14 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
         }
         return;
 
+//YAMAUCHI
+    } else if (pcmk__str_eq(op, LRMD_IPC_OP_CLUSTER_STARTUP, pcmk__str_casei)) {
+            const char *startup_time = crm_element_value(msg, F_CRM_CLUSTER_STARTUP);  
+
+crm_info("#### YAMAUCHI #### receive LRMD_IPC_OP_CLUSTER_STARTUP : %s", startup_time);
+
+            update_attrd(lrm_state->node_name, XML_CIB_ATTR_CLUSTER_STARTUP_TIME, startup_time, NULL, TRUE);
+
     } else if (pcmk__str_eq(op, LRMD_IPC_OP_REQUEST, pcmk__str_casei) && proxy && proxy->is_local) {
         /* This is for the controller, which we are, so don't try
          * to send to ourselves over IPC -- do it directly.
