@@ -277,7 +277,7 @@ ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 
     return 0;
 }
-#if 1
+#if 0
 //YAMAUCHI
 int
 ipc_proxy_send_cluster_startup(pcmk__client_t *ipc_proxy)
