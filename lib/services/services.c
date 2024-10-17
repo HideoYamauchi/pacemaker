@@ -275,7 +275,7 @@ services__create_resource_action(const char *name, const char *standard,
     op->sequence = ++operations;
 
     // Take ownership of params
-    if (pcmk_is_set(ra_caps, pcmk_ra_cap_params)) {
+    if (pcmk_is_set(ra_caps, pcmk_ra_cap_params) || pcmk_is_set(ra_caps, pcmk_ra_cap_status)) {
         op->params = params;
     } else if (params != NULL) {
         g_hash_table_destroy(params);

@@ -831,6 +831,7 @@ action_complete(svc_action_t * action)
 #ifdef PCMK__TIME_USE_CGT
     if (cmd->result.exit_status != action->rc) {
         cmd->epoch_rcchange = time(NULL);
+crm_info("#### YAMAUCHI ##### first : epoch_rcchange : %s", ctime(&cmd->epoch_rcchange));
     }
 #endif
 
@@ -901,7 +902,27 @@ action_complete(svc_action_t * action)
                     }
                 }
             }
+        } else if (pcmk__strcase_any_of(cmd->action, PCMK_ACTION_MONITOR,
+                PCMK_ACTION_STATUS, NULL) && (cmd->interval_ms > 0)) {
+	    if (pcmk__str_eq(g_hash_table_lookup(cmd->params, "monitor-pending-timeout"), "true", pcmk__str_casei)) {
+                if ((cmd->result.execution_status == PCMK_EXEC_PENDING) &&
+                    (cmd->last_notify_op_status == PCMK_EXEC_PENDING)) {
+                    double time_left = difftime(time(NULL), cmd->epoch_rcchange);
+
+		    if (time_left > cmd->timeout_orig) {
+			    ;
+                    }
+                }
+            }
         }
+    }
+    {
+    time_t current_time = time(NULL);
+    crm_info("#### YAMAUCHI ##### now : %s", ctime(&current_time));
+    crm_info("#### YAMAUCHI ##### epoch_rcchange : %s", ctime(&cmd->epoch_rcchange));
+    crm_info("#### YAMAUCHI ##### left_time : %.2f", difftime(current_time, cmd->epoch_rcchange));
+    crm_info("#### YAMAUCHI ##### timeout_orig : %d", cmd->timeout_orig);
+    crm_info("#### YAMAUCHI ##### param : %d", pcmk__str_eq(g_hash_table_lookup(cmd->params, "monitor-pending-timeout"), "true", pcmk__str_casei));
     }
 #endif
 
