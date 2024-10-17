@@ -904,25 +904,37 @@ crm_info("#### YAMAUCHI ##### first : epoch_rcchange : %s", ctime(&cmd->epoch_rc
             }
         } else if (pcmk__strcase_any_of(cmd->action, PCMK_ACTION_MONITOR,
                 PCMK_ACTION_STATUS, NULL) && (cmd->interval_ms > 0)) {
-	    if (pcmk__str_eq(g_hash_table_lookup(cmd->params, "monitor-pending-timeout"), "true", pcmk__str_casei)) {
+
+    time_t current_time = time(NULL);
+    crm_info("#### YAMAUCHI ##### now : %s", ctime(&current_time));
+    crm_info("#### YAMAUCHI ##### last_notify_op_status : %d", cmd->last_notify_op_status);
+    crm_info("#### YAMAUCHI ##### epoch_rcchange : %s", ctime(&cmd->epoch_rcchange));
+    crm_info("#### YAMAUCHI ##### left_time : %.2f", difftime(current_time, cmd->epoch_rcchange));
+    crm_info("#### YAMAUCHI ##### timeout_orig : %d", cmd->timeout_orig/1000);
+    crm_info("#### YAMAUCHI ##### param : %d", pcmk__str_eq(g_hash_table_lookup(cmd->params, "monitor-pending-timeout"), "true", pcmk__str_casei));
+
+            if (pcmk__str_eq(g_hash_table_lookup(cmd->params, "monitor-pending-timeout"), "true", pcmk__str_casei)) {
                 if ((cmd->result.execution_status == PCMK_EXEC_PENDING) &&
                     (cmd->last_notify_op_status == PCMK_EXEC_PENDING)) {
+
                     double time_left = difftime(time(NULL), cmd->epoch_rcchange);
 
-		    if (time_left > cmd->timeout_orig) {
-			    ;
+		    if (time_left > (cmd->timeout_orig/1000)) {
+                        crm_notice("Giving up on %s %s (rc=%d): monitor pending timeout (elapsed=%ds timeout=%ds)",
+                            cmd->rsc_id, cmd->action,
+                            cmd->result.exit_status, (int)time_left, cmd->timeout_orig/1000);
+                        crm_info("#### YAMAUCHI #### Giving up on %s %s (rc=%d): monitor pending timeout (elapsed=%ds timeout=%ds)",
+                            cmd->rsc_id, cmd->action,
+                            cmd->result.exit_status, (int)time_left, cmd->timeout_orig/1000);
+                        pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
+                             PCMK_EXEC_TIMEOUT,
+                             "Investigate reason for timeout, and adjust "
+                             "configured operation timeout if necessary");
+                        cmd_original_times(cmd);
                     }
                 }
             }
         }
-    }
-    {
-    time_t current_time = time(NULL);
-    crm_info("#### YAMAUCHI ##### now : %s", ctime(&current_time));
-    crm_info("#### YAMAUCHI ##### epoch_rcchange : %s", ctime(&cmd->epoch_rcchange));
-    crm_info("#### YAMAUCHI ##### left_time : %.2f", difftime(current_time, cmd->epoch_rcchange));
-    crm_info("#### YAMAUCHI ##### timeout_orig : %d", cmd->timeout_orig);
-    crm_info("#### YAMAUCHI ##### param : %d", pcmk__str_eq(g_hash_table_lookup(cmd->params, "monitor-pending-timeout"), "true", pcmk__str_casei));
     }
 #endif
 
