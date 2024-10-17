@@ -677,7 +677,13 @@ systemd_unit_exists(const char *name)
     "  <" PCMK_XE_SHORTDESC " " PCMK_XA_LANG "=\"" PCMK__VALUE_EN "\">"        \
         "systemd unit file for %s"                                             \
       "</" PCMK_XE_SHORTDESC ">\n"                                             \
-    "  <" PCMK_XE_PARAMETERS "/>\n"                                            \
+    "  <" PCMK_XE_PARAMETERS ">\n"                                            \
+    "  <parameter name=\"monitor-pending-timeout\" unique=\"0\">\n" \
+    "  <longdesc lang=\"en\">XXXXXXXXXXXXXX.</longdesc>\n" \
+    "  <shortdesc lang=\"en\">XXXXX</shortdesc>\n" \
+    "  <content type=\"boolean\" default=\"false\" />\n" \
+    "  </parameter>\n" \
+    "  </" PCMK_XE_PARAMETERS ">\n"                                            \
     "  <" PCMK_XE_ACTIONS ">\n"                                                \
     "    <" PCMK_XE_ACTION " " PCMK_XA_NAME "=\"" PCMK_ACTION_START "\""       \
                            " " PCMK_META_TIMEOUT "=\"100s\" />\n"              \
