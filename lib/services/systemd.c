@@ -665,6 +665,7 @@ systemd_unit_exists(const char *name)
 }
 
 // @TODO Use XML string constants and maybe a real XML object
+#define PCMK_XE_MONITOR_PENDING_TIMEOUT "monitor-pending-timeout"
 #define METADATA_FORMAT                                                        \
     "<?xml " PCMK_XA_VERSION "=\"1.0\"?>\n"                                    \
     "<" PCMK_XE_RESOURCE_AGENT " "                                             \
@@ -678,11 +679,11 @@ systemd_unit_exists(const char *name)
         "systemd unit file for %s"                                             \
       "</" PCMK_XE_SHORTDESC ">\n"                                             \
     "  <" PCMK_XE_PARAMETERS ">\n"                                            \
-    "  <parameter name=\"monitor-pending-timeout\" unique=\"0\">\n" \
-    "  <longdesc lang=\"en\">XXXXXXXXXXXXXX.</longdesc>\n" \
-    "  <shortdesc lang=\"en\">XXXXX</shortdesc>\n" \
-    "  <content type=\"boolean\" default=\"false\" />\n" \
-    "  </parameter>\n" \
+    "  <" PCMK_XE_PARAMETER " " PCMK_XA_NAME "=\"" PCMK_XE_MONITOR_PENDING_TIMEOUT "\" " PCMK_XA_UNIQUE "=\"0\">\n" \
+    "  <" PCMK_XE_LONGDESC " " PCMK_XA_LANG "=\"en\">If the pending state continues in monitor, it will be controlled as a timeout.</" PCMK_XE_LONGDESC ">\n" \
+    "  <" PCMK_XE_SHORTDESC " " PCMK_XA_LANG "=\"en\">Controlling the pending state of a monitor.</" PCMK_XE_SHORTDESC ">\n" \
+    "  <" PCMK_XE_CONTENT " type=\"boolean\" " PCMK_XA_DEFAULT "=\"false\" />\n" \
+    "  </" PCMK_XE_PARAMETER ">\n" \
     "  </" PCMK_XE_PARAMETERS ">\n"                                            \
     "  <" PCMK_XE_ACTIONS ">\n"                                                \
     "    <" PCMK_XE_ACTION " " PCMK_XA_NAME "=\"" PCMK_ACTION_START "\""       \
