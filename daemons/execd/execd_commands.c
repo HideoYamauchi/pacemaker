@@ -902,8 +902,8 @@ crm_info("#### YAMAUCHI ##### first : epoch_rcchange : %s", ctime(&cmd->epoch_rc
                     }
                 }
             }
-        } else if (pcmk__strcase_any_of(cmd->action, PCMK_ACTION_MONITOR,
-                PCMK_ACTION_STATUS, NULL) && (cmd->interval_ms > 0)) {
+        } else if (pcmk__strcase_any_of(cmd->action, PCMK_ACTION_MONITOR, PCMK_ACTION_STATUS, NULL) && 
+		  (cmd->interval_ms > 0)) { 
 
     time_t current_time = time(NULL);
     crm_info("#### YAMAUCHI ##### now : %s", ctime(&current_time));
