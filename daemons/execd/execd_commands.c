@@ -911,9 +911,9 @@ crm_info("#### YAMAUCHI ##### first : epoch_rcchange : %s", ctime(&cmd->epoch_rc
     crm_info("#### YAMAUCHI ##### epoch_rcchange : %s", ctime(&cmd->epoch_rcchange));
     crm_info("#### YAMAUCHI ##### left_time : %.2f", difftime(current_time, cmd->epoch_rcchange));
     crm_info("#### YAMAUCHI ##### timeout_orig : %d", cmd->timeout_orig/1000);
-    crm_info("#### YAMAUCHI ##### param : %d", pcmk__str_eq(g_hash_table_lookup(cmd->params, "monitor-pending-timeout"), "true", pcmk__str_casei));
+    crm_info("#### YAMAUCHI ##### param : %d", pcmk__str_eq(g_hash_table_lookup(cmd->params, PCMK_XA_SYSTEMD_MONITOR_PENDING_TIMEOUT), "true", pcmk__str_casei));
 
-            if (pcmk__str_eq(g_hash_table_lookup(cmd->params, "monitor-pending-timeout"), "true", pcmk__str_casei)) {
+            if (pcmk__str_eq(g_hash_table_lookup(cmd->params, PCMK_XA_SYSTEMD_MONITOR_PENDING_TIMEOUT), "true", pcmk__str_casei)) {
                 if ((cmd->result.execution_status == PCMK_EXEC_PENDING) &&
                     (cmd->last_notify_op_status == PCMK_EXEC_PENDING)) {
 
