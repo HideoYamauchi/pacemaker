@@ -919,13 +919,13 @@ crm_info("#### YAMAUCHI ##### first : epoch_rcchange : %s", ctime(&cmd->epoch_rc
 
                     double time_left = difftime(time(NULL), cmd->epoch_rcchange);
 
-		    if (time_left > (cmd->timeout_orig/1000)) {
+		    if ((time_left * 1000) > (cmd->timeout_orig)) {
                         crm_notice("Giving up on %s %s (rc=%d): monitor pending timeout (elapsed=%ds timeout=%ds)",
                             cmd->rsc_id, cmd->action,
-                            cmd->result.exit_status, (int)time_left, cmd->timeout_orig/1000);
+                            cmd->result.exit_status, (int)time_left * 1000, cmd->timeout_orig);
                         crm_info("#### YAMAUCHI #### Giving up on %s %s (rc=%d): monitor pending timeout (elapsed=%ds timeout=%ds)",
                             cmd->rsc_id, cmd->action,
-                            cmd->result.exit_status, (int)time_left, cmd->timeout_orig/1000);
+                            cmd->result.exit_status, (int)time_left * 1000, cmd->timeout_orig);
                         pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
                              PCMK_EXEC_TIMEOUT,
                              "Investigate reason for timeout, and adjust "
