@@ -665,6 +665,7 @@ systemd_unit_exists(const char *name)
 }
 
 // @TODO Use XML string constants and maybe a real XML object
+#define PCMK_XE_MONITOR_PENDING_TIMEOUT "monitor-pending-timeout"
 #define METADATA_FORMAT                                                        \
     "<?xml " PCMK_XA_VERSION "=\"1.0\"?>\n"                                    \
     "<" PCMK_XE_RESOURCE_AGENT " "                                             \
@@ -677,7 +678,13 @@ systemd_unit_exists(const char *name)
     "  <" PCMK_XE_SHORTDESC " " PCMK_XA_LANG "=\"" PCMK__VALUE_EN "\">"        \
         "systemd unit file for %s"                                             \
       "</" PCMK_XE_SHORTDESC ">\n"                                             \
-    "  <" PCMK_XE_PARAMETERS "/>\n"                                            \
+    "  <" PCMK_XE_PARAMETERS ">\n"                                            \
+    "  <" PCMK_XE_PARAMETER " " PCMK_XA_NAME "=\"" PCMK_XE_MONITOR_PENDING_TIMEOUT "\" " PCMK_XA_UNIQUE "=\"0\">\n" \
+    "  <" PCMK_XE_LONGDESC " " PCMK_XA_LANG "=\"en\">If the pending state continues in monitor, it will be controlled as a timeout.</" PCMK_XE_LONGDESC ">\n" \
+    "  <" PCMK_XE_SHORTDESC " " PCMK_XA_LANG "=\"en\">Controlling the pending state of a monitor.</" PCMK_XE_SHORTDESC ">\n" \
+    "  <" PCMK_XE_CONTENT " type=\"boolean\" " PCMK_XA_DEFAULT "=\"false\" />\n" \
+    "  </" PCMK_XE_PARAMETER ">\n" \
+    "  </" PCMK_XE_PARAMETERS ">\n"                                            \
     "  <" PCMK_XE_ACTIONS ">\n"                                                \
     "    <" PCMK_XE_ACTION " " PCMK_XA_NAME "=\"" PCMK_ACTION_START "\""       \
                            " " PCMK_META_TIMEOUT "=\"100s\" />\n"              \
@@ -913,6 +920,16 @@ parse_status_result(const char *name, const char *state, void *userdata)
 {
     svc_action_t *op = userdata;
 
+#if 1
+    static int count = 0;
+crm_info("#### YAMAUCHI #### parse_status_result : %s count : %d", state, count);
+    if (count < 10) {
+        count++;
+    } else {
+        services__set_result(op, PCMK_OCF_UNKNOWN, PCMK_EXEC_PENDING, NULL);
+        goto done;
+    }
+#endif
     crm_trace("Resource %s has %s='%s'",
               pcmk__s(op->rsc, "(unspecified)"), name,
               pcmk__s(state, "<null>"));
@@ -933,6 +950,9 @@ parse_status_result(const char *name, const char *state, void *userdata)
         services__set_result(op, PCMK_OCF_NOT_RUNNING, PCMK_EXEC_DONE, state);
     }
 
+#if 1
+done:
+#endif
     if (!(op->synchronous)) {
         services_set_op_pending(op, NULL);
         services__finalize_async_op(op);
