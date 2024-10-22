@@ -1123,6 +1123,17 @@ services__execute_systemd(svc_action_t *op)
         goto done;
     }
 
+    if (pcmk__strcase_any_of(op->action, PCMK_ACTION_MONITOR, PCMK_ACTION_STATUS, NULL) && 
+       (op->interval_ms > 0)) {
+       if (pcmk__str_eq(g_hash_table_lookup(op->params, PCMK_XA_SYSTEMD_MONITOR_PENDING_TIMEOUT), "true", pcmk__str_casei)) {
+           if (op->interval_ms > op->timeout) {
+               crm_warn("If monitor-pending-timeout is true and the interval is greater than the monitor timeout," 
+	           "two consecutive deactivations of the monitor will be treated as an error." 
+	           "We recommend that you set a short interval so that multiple consecutive deactivations before the timeout are treated as an error.");  
+	   }
+       }
+    }
+
     /* invoke_unit_by_name() should always override these values, which are here
      * just as a fail-safe in case there are any code paths that neglect to
      */
