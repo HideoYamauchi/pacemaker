@@ -831,7 +831,6 @@ action_complete(svc_action_t * action)
 #ifdef PCMK__TIME_USE_CGT
     if (cmd->result.exit_status != action->rc) {
         cmd->epoch_rcchange = time(NULL);
-crm_info("#### YAMAUCHI ##### first : epoch_rcchange : %s", ctime(&cmd->epoch_rcchange));
     }
 #endif
 
@@ -905,14 +904,6 @@ crm_info("#### YAMAUCHI ##### first : epoch_rcchange : %s", ctime(&cmd->epoch_rc
         } else if (pcmk__strcase_any_of(cmd->action, PCMK_ACTION_MONITOR, PCMK_ACTION_STATUS, NULL) && 
 		  (cmd->interval_ms > 0)) { 
 
-    time_t current_time = time(NULL);
-    crm_info("#### YAMAUCHI ##### now : %s", ctime(&current_time));
-    crm_info("#### YAMAUCHI ##### last_notify_op_status : %d", cmd->last_notify_op_status);
-    crm_info("#### YAMAUCHI ##### epoch_rcchange : %s", ctime(&cmd->epoch_rcchange));
-    crm_info("#### YAMAUCHI ##### left_time : %.2f", difftime(current_time, cmd->epoch_rcchange));
-    crm_info("#### YAMAUCHI ##### timeout_orig : %d", cmd->timeout_orig/1000);
-    crm_info("#### YAMAUCHI ##### param : %d", pcmk__str_eq(g_hash_table_lookup(cmd->params, PCMK_XA_SYSTEMD_MONITOR_PENDING_TIMEOUT), "true", pcmk__str_casei));
-
             if (pcmk__str_eq(g_hash_table_lookup(cmd->params, PCMK_XA_SYSTEMD_MONITOR_PENDING_TIMEOUT), "true", pcmk__str_casei)) {
                 if ((cmd->result.execution_status == PCMK_EXEC_PENDING) &&
                     (cmd->last_notify_op_status == PCMK_EXEC_PENDING)) {
@@ -921,9 +912,6 @@ crm_info("#### YAMAUCHI ##### first : epoch_rcchange : %s", ctime(&cmd->epoch_rc
 
 		    if ((time_left * 1000) > (cmd->timeout_orig)) {
                         crm_notice("Giving up on %s %s (rc=%d): monitor pending timeout (elapsed=%ds timeout=%ds)",
-                            cmd->rsc_id, cmd->action,
-                            cmd->result.exit_status, (int)time_left * 1000, cmd->timeout_orig);
-                        crm_info("#### YAMAUCHI #### Giving up on %s %s (rc=%d): monitor pending timeout (elapsed=%ds timeout=%ds)",
                             cmd->rsc_id, cmd->action,
                             cmd->result.exit_status, (int)time_left * 1000, cmd->timeout_orig);
                         pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
