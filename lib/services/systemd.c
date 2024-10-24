@@ -665,6 +665,7 @@ systemd_unit_exists(const char *name)
 }
 
 // @TODO Use XML string constants and maybe a real XML object
+#define PCMK_XE_MONITOR_PENDING_TIMEOUT "monitor-pending-timeout"
 #define METADATA_FORMAT                                                        \
     "<?xml " PCMK_XA_VERSION "=\"1.0\"?>\n"                                    \
     "<" PCMK_XE_RESOURCE_AGENT " "                                             \
@@ -677,7 +678,13 @@ systemd_unit_exists(const char *name)
     "  <" PCMK_XE_SHORTDESC " " PCMK_XA_LANG "=\"" PCMK__VALUE_EN "\">"        \
         "systemd unit file for %s"                                             \
       "</" PCMK_XE_SHORTDESC ">\n"                                             \
-    "  <" PCMK_XE_PARAMETERS "/>\n"                                            \
+    "  <" PCMK_XE_PARAMETERS ">\n"                                            \
+    "  <" PCMK_XE_PARAMETER " " PCMK_XA_NAME "=\"" PCMK_XE_MONITOR_PENDING_TIMEOUT "\" " PCMK_XA_UNIQUE "=\"0\">\n" \
+    "  <" PCMK_XE_LONGDESC " " PCMK_XA_LANG "=\"en\">If the pending state continues in monitor, it will be controlled as a timeout.</" PCMK_XE_LONGDESC ">\n" \
+    "  <" PCMK_XE_SHORTDESC " " PCMK_XA_LANG "=\"en\">Controlling the pending state of a monitor.</" PCMK_XE_SHORTDESC ">\n" \
+    "  <" PCMK_XE_CONTENT " type=\"boolean\" " PCMK_XA_DEFAULT "=\"false\" />\n" \
+    "  </" PCMK_XE_PARAMETER ">\n" \
+    "  </" PCMK_XE_PARAMETERS ">\n"                                            \
     "  <" PCMK_XE_ACTIONS ">\n"                                                \
     "    <" PCMK_XE_ACTION " " PCMK_XA_NAME "=\"" PCMK_ACTION_START "\""       \
                            " " PCMK_META_TIMEOUT "=\"100s\" />\n"              \
@@ -1101,6 +1108,17 @@ services__execute_systemd(svc_action_t *op)
         op->stdout_data = systemd_unit_metadata(op->agent, op->timeout);
         services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
         goto done;
+    }
+
+    if (pcmk__strcase_any_of(op->action, PCMK_ACTION_MONITOR, PCMK_ACTION_STATUS, NULL) && 
+       (op->interval_ms > 0)) {
+       if (pcmk__str_eq(g_hash_table_lookup(op->params, PCMK_XA_SYSTEMD_MONITOR_PENDING_TIMEOUT), "true", pcmk__str_casei)) {
+           if (op->interval_ms > op->timeout) {
+               crm_warn("If monitor-pending-timeout is true and the interval is greater than the monitor timeout," 
+	           "two consecutive deactivations of the monitor will be treated as an error." 
+	           "We recommend that you set a short interval so that multiple consecutive deactivations before the timeout are treated as an error.");  
+	   }
+       }
     }
 
     /* invoke_unit_by_name() should always override these values, which are here
