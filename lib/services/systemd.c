@@ -683,7 +683,8 @@ systemd_unit_exists(const char *name)
         " " PCMK_XA_UNIQUE "=\"0\">\n"                                         \
     "  <" PCMK_XE_LONGDESC " " PCMK_XA_LANG "=\"en\">"                         \
         "It specifies whether a timeout will be triggered when the monitor"    \
-        " remains in a pending state.</" PCMK_XE_LONGDESC ">\n"                \
+        " remains in a pending state.\n"                                       \
+    "  </" PCMK_XE_LONGDESC ">\n"                                              \
     "  <" PCMK_XE_SHORTDESC " " PCMK_XA_LANG "=\"en\">"                        \
         "Enables timeout when monitor is pending.</" PCMK_XE_SHORTDESC ">\n"   \
     "  <" PCMK_XE_CONTENT " type=\"boolean\""                                  \
