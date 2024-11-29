@@ -876,7 +876,7 @@ action_complete(svc_action_t * action)
             cmd->real_action = cmd->action;
             cmd->action = pcmk__str_copy(PCMK_ACTION_MONITOR);
 	} else if (cmd->real_action != NULL) {
-            // This is follow-up monitor to check whether start/stop completed
+            // This is follow-up monitor to check whether start/stop/probe(monitor) completed
             if (cmd->result.execution_status == PCMK_EXEC_PENDING) {
                 goagain = true;
 
