@@ -2285,7 +2285,9 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
                 if (lrm_state && op->interval_ms != 0) {
 		    active_op_t *monitor = NULL;
 		    monitor = g_hash_table_lookup(lrm_state->active_ops, op_id);
-		    if (monitor) {
+
+                    if (!pcmk__str_eq(crm_meta_value(op->params, PCMK_META_ON_FAIL),
+                             PCMK_VALUE_IGNORE, pcmk__str_casei) && monitor) {
                         int target_rc = PCMK_OCF_OK;
 
 			decode_transition_key(op->user_data, NULL, NULL, NULL, &target_rc);
