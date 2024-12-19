@@ -2010,6 +2010,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
                                     &(pending->lock_time)) != pcmk_ok) {
             pending->lock_time = 0;
         }
+	pending->fail_count = 0;
         g_hash_table_replace(lrm_state->active_ops, call_id_s, pending);
 
         if ((op->interval_ms > 0)
@@ -2277,10 +2278,37 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
 
         if (controld_action_is_recordable(op->op_type)) {
             if (node_name && rsc) {
+                gboolean update_cib = TRUE;
                 // We should record the result, and happily, we can
                 time_t lock_time = (pending == NULL)? 0 : pending->lock_time;
 
-                controld_update_resource_history(node_name, rsc, op, lock_time);
+                if (lrm_state && op->interval_ms != 0) {
+		    active_op_t *monitor = NULL;
+		    monitor = g_hash_table_lookup(lrm_state->active_ops, op_id);
+		    if (monitor) {
+                        int target_rc = PCMK_OCF_OK;
+
+			decode_transition_key(op->user_data, NULL, NULL, NULL, &target_rc);
+
+                        crm_info("#### YAMAUCHI #### rsc : %s inteval : %d op_type : %s op->rc : %d target_rc : %d", 
+                            monitor->rsc_id, monitor->interval_ms, monitor->op_type, op->rc, target_rc);
+
+                        if (op->rc != target_rc) {
+                            if (monitor->fail_count == 0){
+                                monitor->fail_count = 1;
+				crm_info("#### YAMAUCHI ##### fail_count = 1");
+                            } else {
+                                crm_notice("The fail-count will not increase due to a monitor failure until \
+						the monitor failure processing is completed.");
+				update_cib = FALSE;
+                            }
+                        }
+	            }
+                }
+
+		if (update_cib) {
+                    controld_update_resource_history(node_name, rsc, op, lock_time);
+		}
                 need_direct_ack = FALSE;
 
             } else if (op->rsc_deleted) {
