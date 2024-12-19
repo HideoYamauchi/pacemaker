@@ -51,6 +51,7 @@ typedef struct active_op_s {
     char *op_key;
     char *user_data;
     GHashTable *params;
+    gboolean monitor_failed;
 } active_op_t;
 
 #define controld_set_active_op_flags(active_op, flags_to_set) do {          \
