@@ -2010,6 +2010,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
                                     &(pending->lock_time)) != pcmk_ok) {
             pending->lock_time = 0;
         }
+	pending->monitor_failed = FALSE;
         g_hash_table_replace(lrm_state->active_ops, call_id_s, pending);
 
         if ((op->interval_ms > 0)
@@ -2277,10 +2278,48 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
 
         if (controld_action_is_recordable(op->op_type)) {
             if (node_name && rsc) {
+                gboolean update_cib = TRUE;
                 // We should record the result, and happily, we can
                 time_t lock_time = (pending == NULL)? 0 : pending->lock_time;
 
-                controld_update_resource_history(node_name, rsc, op, lock_time);
+                /* When on-failed is controlling a monitor failure other than block,            */
+                /* monitor failure notifications will be ignored until the control is complete. */
+                /* This will wait for control of the monitor failure.                           */
+                if (lrm_state && op->interval_ms != 0) {
+                    active_op_t *active_monitor = NULL;
+
+                    active_monitor = g_hash_table_lookup(lrm_state->active_ops, op_id);
+
+                    if (!pcmk__str_eq(crm_meta_value(op->params, PCMK_META_ON_FAIL),
+                             PCMK_VALUE_IGNORE, pcmk__str_casei) && active_monitor) {
+                    int target_rc = PCMK_OCF_OK;
+
+                        decode_transition_key(op->user_data, NULL, NULL, NULL, &target_rc);
+
+                        crm_info("#### YAMAUCHI #### rsc : %s inteval : %d op_type : %s op->rc : %d target_rc : %d", 
+                            active_monitor->rsc_id, active_monitor->interval_ms, active_monitor->op_type, op->rc, target_rc);
+
+                        if (op->rc != target_rc) {
+                            if (active_monitor->monitor_failed == FALSE){
+                                active_monitor->monitor_failed = TRUE;
+                                crm_info("#### YAMAUCHI ##### fail_count = 1");
+                            } else {
+                                crm_notice("Fail-count will not increase due to a monitor " \
+                                    "failure until the %s_%s_%d failure operation is completed.",
+                                    active_monitor->rsc_id, active_monitor->op_type, 
+				    active_monitor->interval_ms);
+                                /* If on-fail is set to anything other than ignore, an ignored */
+                                /* monitor failure will not take effect until the monitor is   */
+                                /* stopped and then started again by Pacemaker.                */
+                                update_cib = FALSE;
+                            }
+                        }
+                    }
+                }
+
+                if (update_cib) {
+                    controld_update_resource_history(node_name, rsc, op, lock_time);
+                }
                 need_direct_ack = FALSE;
 
             } else if (op->rsc_deleted) {
