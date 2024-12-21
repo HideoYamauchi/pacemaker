@@ -2304,9 +2304,13 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
                                 active_monitor->monitor_failed = TRUE;
                                 crm_info("#### YAMAUCHI ##### fail_count = 1");
                             } else {
-                                crm_notice("Fail-count will not increase due to a monitor failure until " \
-                                           "the %s_%s_%d failure operation is completed.",
-                                    active_monitor->rsc_id, active_monitor->op_type, active_monitor->interval_ms);
+                                crm_notice("Fail-count will not increase due to a monitor " \
+                                    "failure until the %s_%s_%d failure operation is completed.",
+                                    active_monitor->rsc_id, active_monitor->op_type, 
+				    active_monitor->interval_ms);
+                                /* If on-fail is set to anything other than ignore, an ignored */
+                                /* monitor failure will not take effect until the monitor is   */
+                                /* stopped and then started again by Pacemaker.                */
                                 update_cib = FALSE;
                             }
                         }
