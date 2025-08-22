@@ -225,7 +225,7 @@ device_is_dirty(gpointer key, gpointer value, gpointer user_data)
  * \internal
  * \brief Update all STONITH device definitions based on current CIB
  */
-static void
+void
 cib_devices_update(void)
 {
     crm_info("Updating devices to version %s.%s.%s",
@@ -371,12 +371,13 @@ watchdog_device_update(void)
  *
  * \return Standard Pacemaker return code
  */
-static int
+int
 fenced_query_cib(void)
 {
     int rc = pcmk_ok;
 
     crm_trace("Re-requesting full CIB");
+crm_info("#### YAMAUCHI ##### call fenced_query_cib()");
     rc = cib_api->cmds->query(cib_api, NULL, &local_cib, cib_sync_call);
     rc = pcmk_legacy2rc(rc);
     if (rc == pcmk_rc_ok) {
@@ -480,6 +481,31 @@ update_fencing_topology(const char *event, xmlNode *msg)
     }
 }
 
+bool
+fenced_have_cib_nodes()
+{
+    GString *xpath = NULL;
+    xmlNode *match;
+
+    if (local_cib != NULL) {
+        xpath = g_string_sized_new(256);
+        pcmk__g_strcat(xpath,
+               "//" PCMK_XE_NODES "/" PCMK_XE_NODE, NULL); 
+
+        match = pcmk__xpath_find_one(local_cib->doc, xpath->str, LOG_NEVER);
+
+        if (match != NULL) {
+            crm_log_xml_info(match, "### YAMAUCHI :");
+            crm_info("#### ------- YAMAUCHI FIND NODES(1) ----------------####");
+	    return true;
+        } else {
+            crm_info("#### YAMAUCHI NOT FIND NODES(1) IGNORE ####");
+        } 
+        g_string_free(xpath, TRUE);
+    }
+    return false;
+}
+
 static void
 update_cib_cache_cb(const char *event, xmlNode * msg)
 {
@@ -551,7 +577,10 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
 
     if (need_full_refresh) {
         fencing_topology_init();
-        cib_devices_update();
+
+	if (fenced_have_cib_nodes()) {
+            cib_devices_update();
+	}
     } else {
         // Partial refresh
         update_fencing_topology(event, msg);
@@ -572,7 +601,10 @@ init_cib_cache_cb(xmlNode * msg, int call_id, int rc, xmlNode * output, void *us
     update_stonith_watchdog_timeout_ms(local_cib);
 
     fencing_topology_init();
-    cib_devices_update();
+
+    if (fenced_have_cib_nodes()) {
+        cib_devices_update();
+    }
     watchdog_device_update();
 }
 

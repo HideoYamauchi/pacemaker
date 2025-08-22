@@ -370,6 +370,9 @@ gboolean node_does_watchdog_fencing(const char *node);
 void fencing_topology_init(void);
 void setup_cib(void);
 void fenced_cib_cleanup(void);
+int fenced_query_cib(void); //YAMAUCHI
+bool fenced_have_cib_nodes(void); //YAMAUCHI
+void cib_devices_update(void); //YAMAUCHI
 
 int fenced_scheduler_init(void);
 void fenced_set_local_node(const char *node_name);

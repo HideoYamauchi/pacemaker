@@ -2219,8 +2219,35 @@ get_capable_devices(const char *host, const char *action, int timeout,
     guint ndevices = g_hash_table_size(device_table);
 
     if (ndevices == 0) {
+#if 1
+//YAMAUCHI
+        if ((pcmk__str_eq(action, PCMK_ACTION_ON, pcmk__str_none)) && (!fenced_have_cib_nodes())) {
+            crm_info("#### YAMAUCHI #####(1) ndevce==0 Fist - action : %s timeout : %d", action, timeout);
+            if (fenced_query_cib() != pcmk_rc_ok) {
+                crm_info("#### YAMAUCHI ##### fence_query_cib() ERROR return");
+                return;
+            }
+            //When unfencing(on) is requested, the topology is already deployed, so only cib_device_update() is processed.
+            crm_info("#### YAMAUCHI ##### cib_devices_update() call ");
+            cib_devices_update();
+
+            ndevices = g_hash_table_size(device_table);
+            if (ndevices == 0) {
+                crm_info("#### YAMAUCHI #####(2) ndevce==0 Second - action : %s timeout : %d", action, timeout);
+                callback(NULL, user_data);
+                return;
+	    } else {
+                crm_info("#### YAMAUCHI #####(3) ndevce: %d Second - action : %s timeout : %d", ndevices, action, timeout);
+	    }
+	} else { 
+            crm_info("#### YAMAUCHI #####(2) ndevce==0 Third - action : %s timeout : %d", action, timeout);
+            callback(NULL, user_data);
+            return;
+	}
+#else        
         callback(NULL, user_data);
         return;
+#endif
     }
 
     search = pcmk__assert_alloc(1, sizeof(struct device_search_s));
