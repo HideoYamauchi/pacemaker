@@ -2218,6 +2218,16 @@ get_capable_devices(const char *host, const char *action, int timeout,
     struct device_search_s *search;
     guint ndevices = g_hash_table_size(device_table);
 
+    //YAMAUCHI
+    if ((pcmk__str_eq(action, PCMK_ACTION_ON, pcmk__str_none)) && (!fenced_have_cib_nodes())) {
+        crm_info("#### YAMAUCHI #####(1) ndevce==0 Fist - action : %s timeout : %d", action, timeout);
+        //When unfencing(on) is requested.......
+        crm_info("#### YAMAUCHI ##### force_cib_query_and_devices_update() call ");
+	force_cib_query_and_devices_update();
+
+        ndevices = g_hash_table_size(device_table);
+    }
+
     if (ndevices == 0) {
         callback(NULL, user_data);
         return;

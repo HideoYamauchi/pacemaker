@@ -376,6 +376,9 @@ void fenced_set_local_node(const char *node_name);
 const char *fenced_get_local_node(void);
 void fenced_scheduler_cleanup(void);
 void fenced_scheduler_run(xmlNode *cib);
+bool fenced_have_cib_nodes(void); //YAMAUCHI
+bool force_cib_query_and_devices_update(void); //YAMAUCHI
+
 
 /*!
  * \internal

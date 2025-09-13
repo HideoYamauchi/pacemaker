@@ -480,6 +480,42 @@ update_fencing_topology(const char *event, xmlNode *msg)
     }
 }
 
+bool
+fenced_have_cib_nodes()
+{
+    GString *xpath = NULL;
+    xmlNode *match;
+    if (local_cib != NULL) {
+        xpath = g_string_sized_new(256);
+        pcmk__g_strcat(xpath,
+            "//" PCMK_XE_NODES "/" PCMK_XE_NODE, NULL);
+
+        match = pcmk__xpath_find_one(local_cib->doc, xpath->str, LOG_NEVER);
+        if (match != NULL) {
+            crm_log_xml_info(match, "### YAMAUCHI :");
+	    crm_info("#### ------- YAMAUCHI FIND NODES(1) ----------------####");
+	    return true;
+	} else {
+    		crm_info("#### YAMAUCHI NOT FIND NODES(1) IGNORE ####");
+	}
+	g_string_free(xpath, TRUE);
+    }
+    return false;
+}
+
+bool
+force_cib_query_and_devices_update(){
+    if (fenced_query_cib() != pcmk_rc_ok) {
+        crm_info("#### YAMAUCHI fenced_query_cib() ERROR ####");
+        return false;
+    }
+    if (fenced_have_cib_nodes()) {
+        fencing_topology_init();
+        cib_devices_update();
+    }
+    return true;
+}
+
 static void
 update_cib_cache_cb(const char *event, xmlNode * msg)
 {
@@ -551,7 +587,9 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
 
     if (need_full_refresh) {
         fencing_topology_init();
-        cib_devices_update();
+        if (fenced_have_cib_nodes()) { //YAMAUCHI 
+            cib_devices_update();
+	} //YAMAUCHI}
     } else {
         // Partial refresh
         update_fencing_topology(event, msg);
@@ -572,7 +610,9 @@ init_cib_cache_cb(xmlNode * msg, int call_id, int rc, xmlNode * output, void *us
     update_stonith_watchdog_timeout_ms(local_cib);
 
     fencing_topology_init();
-    cib_devices_update();
+    if (fenced_have_cib_nodes()) { //YAMAUCHI 
+        cib_devices_update();
+    } //YAMAUCHI
     watchdog_device_update();
 }
 
