@@ -210,7 +210,8 @@ based_process_shutdown(xmlNode *req, xmlNode **cib, xmlNode **answer)
 int
 based_process_sync(xmlNode *req, xmlNode **cib, xmlNode **answer)
 {
-    return sync_our_cib(req, true);
+do_crm_log(LOG_INFO, "#### YAMAUCHI #### based_process_sync()");
+    return sync_our_cib(req, true, true);
 }
 
 int
@@ -336,7 +337,7 @@ cib_msg_copy(const xmlNode *msg)
 }
 
 int
-sync_our_cib(const xmlNode *request, bool all)
+sync_our_cib(const xmlNode *request, bool all, bool force)
 {
     int rc = pcmk_rc_ok;
     char *digest = NULL;
@@ -349,6 +350,8 @@ sync_our_cib(const xmlNode *request, bool all)
 
     pcmk__debug("Syncing CIB to %s", (all? "all peers" : host));
 
+do_crm_log(LOG_INFO, "#### YAMAUCHI #### sync_our_cib()");
+
     replace_request = cib_msg_copy(request);
 
     if (host != NULL) {
@@ -357,6 +360,13 @@ sync_our_cib(const xmlNode *request, bool all)
     if (all) {
         pcmk__xe_remove_attr(replace_request, PCMK__XA_CIB_HOST);
     }
+//YAMAUCHI
+    if (force) {
+do_crm_log(LOG_INFO, "#### YAMAUCHI #### sync_our_cib() ---> set PCMK__XA_CIB_REPLACE_FORCE");
+        pcmk__xe_set_bool(replace_request, PCMK__XA_CIB_REPLACE_FORCE, true);
+    }
+//YAMAUCHI
+pcmk__log_xml_info(replace_request, "#### YAMAUCHI replace_request ####:");
 
     pcmk__xe_set(replace_request, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_REPLACE);
 

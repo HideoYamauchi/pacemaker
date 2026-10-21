@@ -639,12 +639,15 @@ do_dc_join_finalize(long long action, enum crmd_fsa_cause cause,
         return;
     }
 
+do_crm_log(LOG_INFO, "#### YAMAUCHI ##### max_generation_from : %s", max_generation_from);
     if (pcmk__is_set(controld_globals.fsa_input_register, R_HAVE_CIB)) {
         // Send our CIB out to everyone
         sync_from = pcmk__str_copy(controld_globals.cluster->priv->node_name);
+do_crm_log(LOG_INFO, "#### YAMAUCHI ##### sync_from set 1: %s", sync_from);
     } else {
         // Ask for the agreed best CIB
         sync_from = pcmk__str_copy(max_generation_from);
+do_crm_log(LOG_INFO, "#### YAMAUCHI ##### sync_from set 2: %s", sync_from);
     }
 
     pcmk__notice("Finalizing join-%d for %d node%s (sync'ing CIB %s.%s.%s "
@@ -665,6 +668,8 @@ do_dc_join_finalize(long long action, enum crmd_fsa_cause cause,
                  sync_from);
 
     crmd_join_phase_log(LOG_DEBUG);
+do_crm_log(LOG_INFO, "#### YAMAUCHI ##### sync_from : %s", sync_from);
+//pcmk__log_xml_info(max_generation_xml, "#### YAMAUCHI max_generation_xml ####:");
 
     rc = controld_globals.cib_conn->cmds->sync_from(controld_globals.cib_conn,
                                                     sync_from, NULL, cib_none);

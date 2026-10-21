@@ -285,12 +285,14 @@ cib_client_upgrade(cib_t * cib, int call_options)
 static int
 cib_client_sync(cib_t * cib, const char *section, int call_options)
 {
+do_crm_log(LOG_INFO, "#### YAMAUCHI #### cib_client_sync()");
     return cib->cmds->sync_from(cib, NULL, section, call_options);
 }
 
 static int
 cib_client_sync_from(cib_t * cib, const char *host, const char *section, int call_options)
 {
+do_crm_log(LOG_INFO, "#### YAMAUCHI #### cib_client_sync_from()");
     return cib_internal_op(cib, PCMK__CIB_REQUEST_SYNC, host, section, NULL,
                            NULL, call_options, cib->user);
 }

@@ -844,6 +844,10 @@ replace_cib(xmlNode *request, xmlNode **cib)
     const char *reason = NULL;
     const char *peer = pcmk__xe_get(request, PCMK__XA_SRC);
     xmlNode *input = cib__get_calldata(request);
+//YAMAUHI
+    bool replace_force = false;
+    (void) pcmk__xe_get_bool(request, PCMK__XA_CIB_REPLACE_FORCE, &replace_force);
+do_crm_log(LOG_INFO, "#### YAMAUCHI #### replace_cib() -- replace_force : %s", replace_force ? "true": "false");
 
     cib_version_details(*cib, &admin_epoch, &epoch, &updates);
     cib_version_details(input, &replace_admin_epoch, &replace_epoch,
@@ -855,29 +859,35 @@ replace_cib(xmlNode *request, xmlNode **cib)
                    replace_updates, peer, admin_epoch, epoch, updates);
         return pcmk_rc_digest_mismatch;
     }
+//YAMAUCHI    
+    if (replace_force) {
+        pcmk__info("#### YAMAUCHI #### Replaced %d.%d.%d with %d.%d.%d from %s(force)", admin_epoch, epoch,
+               updates, replace_admin_epoch, replace_epoch, replace_updates,
+               peer);
+    } else {
+        if (replace_admin_epoch < admin_epoch) {
+            reason = PCMK_XA_ADMIN_EPOCH;
 
-    if (replace_admin_epoch < admin_epoch) {
-        reason = PCMK_XA_ADMIN_EPOCH;
+        } else if (replace_admin_epoch > admin_epoch) {
+            /* no more checks */
 
-    } else if (replace_admin_epoch > admin_epoch) {
-        /* no more checks */
+        } else if (replace_epoch < epoch) {
+            reason = PCMK_XA_EPOCH;
 
-    } else if (replace_epoch < epoch) {
-        reason = PCMK_XA_EPOCH;
+        } else if (replace_epoch > epoch) {
+            /* no more checks */
 
-    } else if (replace_epoch > epoch) {
-        /* no more checks */
+        } else if (replace_updates < updates) {
+            reason = PCMK_XA_NUM_UPDATES;
+        }
 
-    } else if (replace_updates < updates) {
-        reason = PCMK_XA_NUM_UPDATES;
-    }
-
-    if (reason != NULL) {
-        pcmk__info("Replacement %d.%d.%d from %s not applied to %d.%d.%d: "
+        if (reason != NULL) {
+            pcmk__info("Replacement %d.%d.%d from %s not applied to %d.%d.%d: "
                    "current %s is greater than the replacement",
                    replace_admin_epoch, replace_epoch, replace_updates, peer,
                    admin_epoch, epoch, updates, reason);
-        return pcmk_rc_old_data;
+            return pcmk_rc_old_data;
+        }
     }
 
     *cib = pcmk__xml_replace_with_copy(*cib, input);
