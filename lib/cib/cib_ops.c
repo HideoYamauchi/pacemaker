@@ -860,11 +860,7 @@ do_crm_log(LOG_INFO, "#### YAMAUCHI #### replace_cib() -- replace_force : %s", r
         return pcmk_rc_digest_mismatch;
     }
 //YAMAUCHI    
-    if (replace_force) {
-        pcmk__info("#### YAMAUCHI #### Replaced %d.%d.%d with %d.%d.%d from %s(force)", admin_epoch, epoch,
-               updates, replace_admin_epoch, replace_epoch, replace_updates,
-               peer);
-    } else {
+    if (!replace_force) {
         if (replace_admin_epoch < admin_epoch) {
             reason = PCMK_XA_ADMIN_EPOCH;
 
@@ -892,9 +888,9 @@ do_crm_log(LOG_INFO, "#### YAMAUCHI #### replace_cib() -- replace_force : %s", r
 
     *cib = pcmk__xml_replace_with_copy(*cib, input);
 
-    pcmk__info("Replaced %d.%d.%d with %d.%d.%d from %s", admin_epoch, epoch,
+    pcmk__info("Replaced %d.%d.%d with %d.%d.%d from %s %s", admin_epoch, epoch,
                updates, replace_admin_epoch, replace_epoch, replace_updates,
-               peer);
+               peer, replace_force ? "(force)" : "");
     return pcmk_rc_ok;
 }
 
