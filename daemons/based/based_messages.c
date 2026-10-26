@@ -336,7 +336,7 @@ cib_msg_copy(const xmlNode *msg)
 }
 
 int
-sync_our_cib(const xmlNode *request, bool all, bool force)
+sync_our_cib(const xmlNode *request, bool all, bool join_finalize_sync)
 {
     int rc = pcmk_rc_ok;
     char *digest = NULL;
@@ -359,7 +359,7 @@ sync_our_cib(const xmlNode *request, bool all, bool force)
     }
     // When synchronizing in a cluster configuration, if the synchronization originates from a DC node, 
     // the CIB of that DC node is forcibly synchronized. 
-    if (force && based_get_local_node_dc()) {
+    if (join_finalize_sync && based_get_local_node_dc()) {
         pcmk__xe_set_bool(replace_request, PCMK__XA_CIB_REPLACE_FORCE, true);
     }
 
