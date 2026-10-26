@@ -357,7 +357,9 @@ sync_our_cib(const xmlNode *request, bool all, bool force)
     if (all) {
         pcmk__xe_remove_attr(replace_request, PCMK__XA_CIB_HOST);
     }
-    if (force) {
+    // When synchronizing in a cluster configuration, if the synchronization originates from a DC node, 
+    // the CIB of that DC node is forcibly synchronized. 
+    if (force && based_get_local_node_dc()) {
         pcmk__xe_set_bool(replace_request, PCMK__XA_CIB_REPLACE_FORCE, true);
     }
 
